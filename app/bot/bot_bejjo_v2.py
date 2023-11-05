@@ -1,0 +1,2 @@
+def checkBot(move):
+    pass

@@ -1,0 +1,21 @@
+homeMenu = ["1.Play","2.Recent Score","3.Leaderboard","4.Details","5.Bot","6.Exit"]
+allScores = [10000, 6000, 3000, 1000]
+allNames = ["Pro(Computer)", "Advance(Computer)", "Intermediate(Computer)", "Novice(Computer)"]
+
+def hint():
+    print("A : Left\tS : Down\tD : Right\tW : Up")
+
+def info():
+    print("\nInformation\n-----------")
+    print("Dont hit the spike!!")
+    print(
+        "When the balloon hit the dollars, it will spawn a spike before\nExample : ")
+    print("\n* * *          * * *")
+    print("O $     ->     * O")
+    print("* * *          * * *\n")
+    print("\nMove Keys :")
+    hint()
+
+def header(point, rage, sp, name, best, eated, map):
+    print(f"Point($) : {point}\tRage : {rage}\t Super Rage : {sp}\tName : {name}\tBest Score : {best}")
+    print(f"Spike : {sum(map, []).count('*') - 116}\tEated : {eated}\t", end="")
