@@ -1,4 +1,4 @@
-from app.map import borderMap, mapCheck, printMap
+from app.map import mapCheck, printMap
 from app.hero import findDollar, eatCheck, moveHero, dropDollar
 from app.guide import header
 from app.prompt import cls, getKey, isTriggered
