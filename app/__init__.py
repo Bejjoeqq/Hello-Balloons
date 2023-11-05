@@ -7,7 +7,7 @@ point = 0
 eated = 0
 sp = 200
 move = ""
-speed = 0.5
+speed = 0.05
 
 def state(map):
     map = borderMap(map)
