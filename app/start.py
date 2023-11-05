@@ -4,24 +4,23 @@ from app.guide import header
 from app.prompt import cls, getKey, isTriggered
 from app import state
 
-#replace this to your bot
-from app.bot.bot_bejjo_v1 import checkBot 
-# from app.bot.bot_bejjo_v2 import checkBot 
-
-def play(name, best, map, bot=False):
+def play(name, best, map, bot=None):
     map, rage, point, eated, sp, move, hero = state(map)
     while True:
         cls()
         header(point, rage, sp, name, best, eated, map)
         ybot, xbot = findDollar(map)
         print(f"Location : {xbot}, {ybot}")
+        if sp == 0:
+            printMap(map)
+            break
         if rage != 0:
             rage -= 1
         if sp != 0:
             sp -= 1
 
         if bot:
-            move = checkBot(move, map, hero)
+            move = bot(move, map, hero)
         else:
             if isTriggered():
                 move = getKey()
@@ -32,6 +31,7 @@ def play(name, best, map, bot=False):
             break
 
         check = eatCheck(move, map, hero)
+        map, hero = moveHero(move, check, map, hero)
         if check:
             point += 20
             point += rage + sp
@@ -42,6 +42,5 @@ def play(name, best, map, bot=False):
                 sp += 50
             eated += 1
             map = dropDollar(map)
-        map, hero = moveHero(move, check, map, hero)
         printMap(map)
     return point

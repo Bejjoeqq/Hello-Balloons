@@ -1,6 +1,8 @@
 from app.hero import findDollar
 from app.map import mapCheck
 
+NAME = "BejjoV1"
+
 def checkBot(move, map, hero):
     prev_move = move
     ybot, xbot = findDollar(map)

@@ -2,12 +2,18 @@ from app.prompt import anyInput, yesNo
 from app.start import play
 from app.guide import info
 from app.map import getMap
-from app.guide import homeMenu, allScores, allScores
+from app.guide import homeMenu
 from pysharedoscom import menu
+
+#replace this to your bot
+from app.bot.bot_bejjo_v1 import checkBot, NAME 
+# from app.bot.bot_bejjo_v2 import checkBot 
 
 def main():
     scores = []
     name = ""
+    allScores = [10000, 6000, 3000, 1000]
+    allNames = ["Pro(Computer)", "Advance(Computer)", "Intermediate(Computer)", "Novice(Computer)"]
     while True:
         menus = menu(homeMenu)
         if menus == 0:
@@ -25,24 +31,25 @@ def main():
                 yes = yesNo()
                 if yes:
                     break
+            allScores.append(best)
+            allNames.append(name)
         if menus == 1:
             print("\nLast Played\n-----------")
-            print(name, ",".join(scores))
+            print(name, scores)
             anyInput()
         if menus == 2:
             print("\nLocal Rank\n----------")
             for y, x in enumerate(sorted(allScores, reverse=True)):
                 p = allScores.index(x)
-                print(f"{y+1}. {allScores[p]} : {allScores[p]}")
+                print(f"{y+1}. {allScores[p]} : {allNames[p]}")
             anyInput()
         if menus == 3:
             info()
             anyInput()
         if menus == 4:
             map = getMap()
-            name = "bot"
             best = "999999+"
-            play(name, best, map, True)
+            play(NAME, best, map, checkBot)
             anyInput()
         if menus == 5:
             break

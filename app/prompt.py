@@ -1,9 +1,10 @@
+from app import speed
 import time, os
 import msvcrt
 
 
 def cls():
-    time.sleep(0.05)
+    time.sleep(speed)
     if os.name == "nt":
         os.system("cls")
     else:

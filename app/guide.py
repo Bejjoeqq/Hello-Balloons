@@ -1,6 +1,4 @@
 homeMenu = ["1.Play","2.Recent Score","3.Leaderboard","4.Details","5.Bot","6.Exit"]
-allScores = [10000, 6000, 3000, 1000]
-allNames = ["Pro(Computer)", "Advance(Computer)", "Intermediate(Computer)", "Novice(Computer)"]
 
 def hint():
     print("A : Left\tS : Down\tD : Right\tW : Up")
@@ -17,5 +15,5 @@ def info():
     hint()
 
 def header(point, rage, sp, name, best, eated, map):
-    print(f"Point($) : {point}\tRage : {rage}\t Super Rage : {sp}\tName : {name}\tBest Score : {best}")
+    print(f"Point($) : {point}\tRage : {rage}\t Time : {sp}\tName : {name}\tBest Score : {best}")
     print(f"Spike : {sum(map, []).count('*') - 116}\tEated : {eated}\t", end="")
