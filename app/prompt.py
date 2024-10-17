@@ -1,24 +1,34 @@
+import time, os, sys
+
 from app import speed
-import time, os
-import msvcrt
+
+if os.name != "nt":
+    import termios,tty,select
+else:
+    import msvcrt
 
 
 def cls():
     time.sleep(speed)
-    if os.name == "nt":
-        os.system("cls")
-    else:
+    if os.name != "nt":
         os.system("clear")
+    else:
+        os.system("cls")
 
-def anyInput():   
-    if os.name == "nt":
+
+def anyInput():
+    if os.name != "nt":
+        print("Press any key")
+        sys.stdin.read(1)
+    else:
         print("Press any key")
         msvcrt.getch()
-    else:
-        print("key not supported")
+
 
 def getKey():
-    if os.name == "nt":
+    if os.name != "nt":
+        raise NotImplementedError("This function is not implemented yet.")
+    else:
         moveCheck = msvcrt.getch()
         if moveCheck == b'\xe0':
             secondMoveCheck = msvcrt.getch()
@@ -31,23 +41,30 @@ def getKey():
             elif secondMoveCheck == b'M':
                 return "d"
         moveCheck = moveCheck.decode("utf-8").lower()
-        if (moveCheck == "a") or (moveCheck == "s") or (moveCheck == "d") or (moveCheck == "w"):
+        if moveCheck in ("a", "s", "d", "w"):
             return moveCheck
-    else:
-        print("key not supported")
+
 
 def isTriggered():
-    if os.name == "nt":
-        return msvcrt.kbhit()
+    if os.name != "nt":
+        raise NotImplementedError("This function is not implemented yet.")
     else:
-        print("key not supported")
-    
+        return msvcrt.kbhit()
+
+
 def yesNo():
-    if os.name == "nt":
+    if os.name != "nt":
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            response = sys.stdin.read(1).lower()
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return response == "n"
+    else:
         try:
             if msvcrt.getch().decode("utf-8").lower() == "n":
                 return True
         except Exception:
             return False
-    else:
-        print("key not supported")
