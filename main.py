@@ -1,13 +1,13 @@
 from app.prompt import anyInput, yesNo
 from app.start import play
 from app.guide import info
-from app.map import getMap
+from app import baseMap
 from app.guide import homeMenu
 from pysharedoscom import menu
 
 #replace this to your bot
 from app.bot.bot_bejjo_v1 import checkBot, NAME 
-# from app.bot.bot_bejjo_v2 import checkBot 
+# from app.bot.bot_bejjo_v2 import checkBot, NAME
 
 def main():
     scores = []
@@ -15,13 +15,13 @@ def main():
     allScores = [10000, 6000, 3000, 1000]
     allNames = ["Pro(Computer)", "Advance(Computer)", "Intermediate(Computer)", "Novice(Computer)"]
     while True:
-        menus = menu(homeMenu)
+        menus = menu(homeMenu(), title="=+=+=+=+=+=+=+=", desc="=+=+=+=+=+=+=+=")
         if menus == 0:
             best = 0
             scores = []
             name = input("Your Name : ")
             while True:
-                map = getMap()
+                map = baseMap()
                 score = play(name, best, map)
                 if score > best:
                     best = score
@@ -47,7 +47,7 @@ def main():
             info()
             anyInput()
         if menus == 4:
-            map = getMap()
+            map = baseMap()
             best = "999999+"
             play(NAME, best, map, checkBot)
             anyInput()

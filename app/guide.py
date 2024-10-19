@@ -1,4 +1,5 @@
-homeMenu = ["Play","Recent Score","Leaderboard","Details","Bot","Exit"]
+def homeMenu():
+    return ["Play","Recent Score","Leaderboard","Details","Bot","Exit"]
 
 def hint():
     print("A : Left\tS : Down\tD : Right\tW : Up")

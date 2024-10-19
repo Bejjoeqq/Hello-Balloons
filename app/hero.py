@@ -1,64 +1,73 @@
-from app.map import ymap, xmap
-import random
+from app.map import Map
 
-def moveHero(move, eat, map, hero):
-    if move == "a":
-        if eat:
-            map[hero[1]][hero[0]] = "*"
-            hero[0] -= 2
-            map[hero[1]][hero[0]] = "O"
-        else:
-            map[hero[1]][hero[0]] = " "
-            hero[0] -= 2
-            map[hero[1]][hero[0]] = "O"
-    elif move == "s":
-        if eat:
-            map[hero[1]][hero[0]] = "*"
-            hero[1] += 1
-            map[hero[1]][hero[0]] = "O"
-        else:
-            map[hero[1]][hero[0]] = " "
-            hero[1] += 1
-            map[hero[1]][hero[0]] = "O"
-    elif move == "d":
-        if eat:
-            map[hero[1]][hero[0]] = "*"
-            hero[0] += 2
-            map[hero[1]][hero[0]] = "O"
-        else:
-            map[hero[1]][hero[0]] = " "
-            hero[0] += 2
-            map[hero[1]][hero[0]] = "O"
-    elif move == "w":
-        if eat:
-            map[hero[1]][hero[0]] = "*"
-            hero[1] -= 1
-            map[hero[1]][hero[0]] = "O"
-        else:
-            map[hero[1]][hero[0]] = " "
-            hero[1] -= 1
-            map[hero[1]][hero[0]] = "O"
-    return map, hero
+class Hero(Map):
+    def __init__(self, map: list):
+        if map[2][4] != " ":
+            raise ValueError("invalid coordinate")
+        super().__init__(map)
+        self.x = 4
+        self.y = 2
+        self.map[self.y][self.x] = "O"
+        self.currentMove = ""
 
-def eatCheck(move, map, hero):
-    if move == "a":
-        return (map[hero[1]][hero[0] - 2] == "$")
-    elif move == "s":
-        return (map[hero[1] + 1][hero[0]] == "$")
-    elif move == "d":
-        return (map[hero[1]][hero[0] + 2] == "$")
-    elif move == "w":
-        return (map[hero[1] - 1][hero[0]] == "$")
-    
-    
-def dropDollar(map):
-    map[random.randint(1, ymap - 2)][random.randint(2,(xmap - 4) / 2) * 2] = "$"
-    return map
+    def getLocation(self) -> list:
+        return [self.x, self.y]
 
+    def getMove(self) -> str:
+        return self.currentMove
     
-def findDollar(map):
-    for row in range(ymap):
-        for column in range(xmap):
-            if map[row][column] == "$":
-                return row, column
-            
+    def setMove(self, move: str):
+        self.currentMove = move
+
+    def __updateMove(self, item: str):
+        if self.currentMove == "a":
+            self.map[self.y][self.x] = item
+            self.x -= 2
+            self.map[self.y][self.x] = "O"
+        elif self.currentMove == "s":
+            self.map[self.y][self.x] = item
+            self.y += 1
+            self.map[self.y][self.x] = "O"
+        elif self.currentMove == "d":
+            self.map[self.y][self.x] = item
+            self.x += 2
+            self.map[self.y][self.x] = "O"
+        elif self.currentMove == "w":
+            self.map[self.y][self.x] = item
+            self.y -= 1
+            self.map[self.y][self.x] = "O"
+    
+    def __moveCheck(self, item: str):
+        if self.currentMove == "a":
+            return self.map[self.y][self.x - 2] == item
+        elif self.currentMove == "s":
+            return self.map[self.y + 1][self.x] == item
+        elif self.currentMove == "d":
+            return self.map[self.y][self.x + 2] == item
+        elif self.currentMove == "w":
+            return self.map[self.y - 1][self.x] == item
+        
+    def __nextCheck(self, item: str, move: str):
+        if move == "a":
+            return self.map[self.y][self.x - 2] == item
+        elif move == "s":
+            return self.map[self.y + 1][self.x] == item
+        elif move == "d":
+            return self.map[self.y][self.x + 2] == item
+        elif move == "w":
+            return self.map[self.y - 1][self.x] == item
+    
+    def move(self) -> list:
+        if self.__moveCheck("$"):
+            self.__updateMove("*")
+            return [True, True]
+        elif self.__moveCheck("*"):
+            return [False, False]
+        self.__updateMove(" ")
+        return [True, False]
+    
+    def spikeCheck(self, move: str) -> bool:
+        return self.__nextCheck("*", move)
+    
+    def eatCheck(self, move: str) -> bool:
+        return self.__nextCheck("$", move)

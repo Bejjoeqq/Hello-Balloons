@@ -1,14 +1,12 @@
 import time, os, sys
 
-from app import speed
-
 if os.name != "nt":
     import termios,tty,select
 else:
     import msvcrt
 
 
-def cls():
+def cls(speed):
     time.sleep(speed)
     if os.name != "nt":
         os.system("clear")

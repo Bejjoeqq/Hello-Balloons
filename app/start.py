@@ -1,18 +1,18 @@
-from app.map import mapCheck, printMap
-from app.hero import findDollar, eatCheck, moveHero, dropDollar
+from app.hero import Hero
 from app.guide import header
 from app.prompt import cls, getKey, isTriggered
-from app import state
+from app import statePoint
 
 def play(name, best, map, bot=None):
-    map, rage, point, eated, sp, move, hero = state(map)
+    rage, point, eated, sp, speed = statePoint()
+    hero = Hero(map)
     while True:
-        cls()
+        cls(speed)
         header(point, rage, sp, name, best, eated, map)
-        ybot, xbot = findDollar(map)
-        print(f"Location : {xbot}, {ybot}")
+        yDollar, xDoollar = hero.findLocationDollar()
+        print(f"Location : {xDoollar}, {yDollar}")
         if sp == 0:
-            printMap(map)
+            hero.printMap()
             break
         if rage != 0:
             rage -= 1
@@ -20,19 +20,19 @@ def play(name, best, map, bot=None):
             sp -= 1
 
         if bot:
-            move = bot(move, map, hero)
+            move = bot(hero)
+            hero.setMove(move)
         else:
             if isTriggered():
                 move = getKey()
+                hero.setMove(move)
 
-        check = mapCheck(move, map, hero)
-        if check:
-            printMap(map)
+        safety, isEat = hero.move()
+        if not safety:
+            hero.printMap()
             break
 
-        check = eatCheck(move, map, hero)
-        map, hero = moveHero(move, check, map, hero)
-        if check:
+        if isEat:
             point += 20
             point += rage + sp
             rage = 50
@@ -41,6 +41,6 @@ def play(name, best, map, bot=None):
             if (sum(map, []).count('*') - 116) % 4 == 0:
                 sp += 50
             eated += 1
-            map = dropDollar(map)
-        printMap(map)
+            hero.dropRandomDollar()
+        hero.printMap()
     return point

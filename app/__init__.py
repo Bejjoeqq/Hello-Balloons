@@ -1,16 +1,13 @@
-from app.map import borderMap
+def statePoint():
+    rage = 50
+    point = 0
+    eated = 0
+    sp = 200
+    # speed = 0.05
+    speed = 0.01
+    return rage, point, eated, sp, speed
 
-x = 4
-y = 2
-rage = 50
-point = 0
-eated = 0
-sp = 200
-move = ""
-speed = 0.05
-
-def state(map):
-    map = borderMap(map)
-    map[2][10] = "$"
-    map[y][x] = "O"
-    return map, rage, point, eated, sp, move, [x, y]
+def baseMap():
+    xmap = 80
+    ymap = 20
+    return [[" " for xx in range(xmap)] for xx in range(ymap)]
