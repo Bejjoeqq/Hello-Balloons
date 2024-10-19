@@ -2,12 +2,10 @@ from app.prompt import anyInput, yesNo
 from app.start import play
 from app.guide import info
 from app import baseMap
-from app.guide import homeMenu
+from app.guide import homeMenu, speedLevel
 from pysharedoscom import menu
+from app.bot import getBot
 
-#replace this to your bot
-from app.bot.bot_bejjo_v1 import checkBot, NAME 
-# from app.bot.bot_bejjo_v2 import checkBot, NAME
 
 def main():
     scores = []
@@ -20,9 +18,11 @@ def main():
             best = 0
             scores = []
             name = input("Your Name : ")
+            speedIdx = menu(speedLevel(), title="=+=+=+=+=+=+=+=", desc="=+=+=+=+=+=+=+=")
+            speed = [0.1, 0.05, 0.01]
             while True:
                 map = baseMap()
-                score = play(name, best, map)
+                score = play(name, best, map, speed[speedIdx])
                 if score > best:
                     best = score
                 scores.append(score)
@@ -49,7 +49,10 @@ def main():
         if menus == 4:
             map = baseMap()
             best = "999999+"
-            play(NAME, best, map, checkBot)
+            botMenu = getBot()
+            botList = list(botMenu)
+            botChoice = menu(botList, title="=+=+=+=+=+=+=+=", desc="=+=+=+=+=+=+=+=")
+            play(botMenu[botList[botChoice]]["name"], best, map, 0.01, botMenu[botList[botChoice]]["func"])
             anyInput()
         if menus == 5:
             break

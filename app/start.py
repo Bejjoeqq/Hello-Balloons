@@ -3,13 +3,13 @@ from app.guide import header
 from app.prompt import cls, getKey, isTriggered
 from app import statePoint
 
-def play(name, best, map, bot=None):
-    rage, point, eated, sp, speed = statePoint()
+def play(name, best, map, speed, bot=None):
+    rage, point, eated, sp = statePoint()
     hero = Hero(map)
     while True:
         cls(speed)
         header(point, rage, sp, name, best, eated, map)
-        yDollar, xDoollar = hero.findLocationDollar()
+        yDollar, xDoollar = hero.getLocationDollar()
         print(f"Location : {xDoollar}, {yDollar}")
         if sp == 0:
             hero.printMap()
@@ -25,7 +25,8 @@ def play(name, best, map, bot=None):
         else:
             if isTriggered():
                 move = getKey()
-                hero.setMove(move)
+                if move:
+                    hero.setMove(move)
 
         safety, isEat = hero.move()
         if not safety:

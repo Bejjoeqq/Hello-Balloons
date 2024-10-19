@@ -9,7 +9,9 @@ class Map:
         self.xmap = len(self.map[0])
         self.ymap = len(self.map)
         self.__buildBorder()
-        self.map[2][10] = "$"
+        self.yLastDollarCoor = 2
+        self.xLastDollarCoor = 10
+        self.map[self.yLastDollarCoor][self.xLastDollarCoor] = "$"
 
     def getMap(self) -> list:
         return self.map
@@ -33,11 +35,22 @@ class Map:
         print("\nResize Your Command Prompt")
         
     def dropRandomDollar(self):
-        self.map[random.randint(1, self.ymap - 2)][random.randint(2,(self.xmap - 4) / 2) * 2] = "$"
+        yDollarCoor = random.randint(1, self.ymap - 2)
+        xDollarCoor = random.randint(2,(self.xmap - 4) / 2) * 2
+        if xDollarCoor == self.xLastDollarCoor and yDollarCoor == self.yLastDollarCoor:
+            yDollarCoor = random.randint(1, self.ymap - 2)
+            xDollarCoor = random.randint(2,(self.xmap - 4) / 2) * 2
+        self.map[yDollarCoor][xDollarCoor] = "$"
+        self.xLastDollarCoor = xDollarCoor
+        self.yLastDollarCoor = yDollarCoor
+
+    def getLocationDollar(self) -> list:
+        return [self.yLastDollarCoor, self.xLastDollarCoor]
     
     def findLocationDollar(self) -> list:
         for row in range(self.ymap):
             for column in range(self.xmap):
                 if self.map[row][column] == "$":
                     return row, column
+        self.printMap()
         input("not found need check")

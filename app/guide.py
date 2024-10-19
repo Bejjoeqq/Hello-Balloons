@@ -1,6 +1,9 @@
 def homeMenu():
     return ["Play","Recent Score","Leaderboard","Details","Bot","Exit"]
 
+def speedLevel():
+    return ["Slow", "Normal", "Fast"]
+
 def hint():
     print("A : Left\tS : Down\tD : Right\tW : Up")
 

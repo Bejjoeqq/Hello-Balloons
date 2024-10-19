@@ -3,9 +3,7 @@ def statePoint():
     point = 0
     eated = 0
     sp = 200
-    # speed = 0.05
-    speed = 0.01
-    return rage, point, eated, sp, speed
+    return rage, point, eated, sp
 
 def baseMap():
     xmap = 80
