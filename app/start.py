@@ -11,12 +11,14 @@ def play(name, best, map, speed, bot=None):
         header(point, rage, sp, name, best, eated, map)
         yDollar, xDoollar = hero.getLocationDollar()
         print(f"Location : {xDoollar}, {yDollar}")
-        if sp == 0:
+        if sp <= 0:
             hero.printMap()
             break
         if rage != 0:
             rage -= 1
         if sp != 0:
+            # deduction = (point // 10000) + 1
+            # sp -= deduction
             sp -= 1
 
         if bot:

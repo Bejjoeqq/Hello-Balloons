@@ -1,5 +1,6 @@
 import random
 from app.guide import hint
+from colorama import Fore, Style
 
 class Map:
     def __init__(self, map: list):
@@ -29,7 +30,11 @@ class Map:
     def printMap(self):
         for row in range(self.ymap):
             for column in range(self.xmap):
-                print(self.map[row][column], end="")
+                char = self.map[row][column]
+                if char == '$':
+                    print(Fore.RED + char + Style.RESET_ALL, end="")
+                else:
+                    print(char, end="")
             print("")
         hint()
         print("\nResize Your Command Prompt")

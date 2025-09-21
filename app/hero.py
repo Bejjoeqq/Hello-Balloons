@@ -56,10 +56,29 @@ class Hero(Map):
             return self.map[self.y][self.x + 2] == item
         elif move == "w":
             return self.map[self.y - 1][self.x] == item
+        
+    def __stuckCase(self):
+        if self.__nextCheck("*","a") and self.__nextCheck("*","d") and self.__nextCheck("*","w") and self.__nextCheck("*","s"):
+            return True
+        return False
     
+    def __updateStuck(self):
+        move = self.currentMove
+        if move == "a":
+            self.map[self.y][self.x+2] = " "
+        elif move == "s":
+            self.map[self.y-1][self.x] = " "
+        elif move == "d":
+            self.map[self.y][self.x-2] = " "
+        elif move == "w":
+            self.map[self.y+1][self.x] = " "
+
     def move(self) -> list:
         if self.__moveCheck("$"):
             self.__updateMove("*")
+            if self.__stuckCase():
+                self.__updateStuck()
+                input("You are stuck! Press Enter to continue...")
             return [True, True]
         elif self.__moveCheck("*"):
             return [False, False]
