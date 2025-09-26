@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balloon Game - Bot Demo</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: auto;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-header, .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .bot-info {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .bot-selection {
+            margin: 15px 0;
+        }
+        
+        .bot-selection select {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            font-size: 1em;
+            width: 100%;
+            max-width: 350px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .bot-selection select:hover {
+            background: rgba(255,255,255,1);
+            transform: translateY(-1px);
+        }
+        
+        .bot-selection select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.3);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            background: rgba(52, 152, 219, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .game-map {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.2;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .menu-btn {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1em;
+        }
+        
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(155, 89, 182, 0.4);
+        }
+        
+        .start-btn {
+            background: linear-gradient(45deg, #27ae60, #219a52);
+        }
+        
+        .start-btn:hover {
+            box-shadow: 0 3px 10px rgba(39, 174, 96, 0.4);
+        }
+        
+        .stop-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        
+        .stop-btn:hover {
+            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4);
+        }
+        
+        .game-over-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content h2 {
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        
+        .final-score {
+            font-size: 2em;
+            color: #ffd700;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .status-info {
+            background: rgba(39, 174, 96, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        /* Character styling for the game map */
+        .game-map .hero { color: #00ff00; font-weight: bold; }
+        .game-map .dollar { color: #ff0000; font-weight: bold; }
+        .game-map .spike { color: #ff6b6b; }
+        .game-map .empty { color: #666; }
+        
+        .last-move {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 5px;
+            margin: 5px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Bot Demo - Balloon Game</h1>
+            <div style="display: flex; gap: 10px;">
+                <button class="menu-btn" onclick="goBotBuilder()">🔧 Build Bot</button>
+                <button class="menu-btn" onclick="goHome()">🏠 Main Menu</button>
+            </div>
+        </div>
+        
+        <div class="bot-info">
+            <h2 id="bot-name">🤖 Select Your Bot</h2>
+            <div class="bot-selection" id="bot-selection">
+                <label for="bot-select" style="display: block; margin-bottom: 10px; font-weight: bold;">Choose Bot Algorithm:</label>
+                <select id="bot-select" style="padding: 10px; border-radius: 5px; border: none; background: rgba(255,255,255,0.9); color: #333; font-size: 1em; width: 100%; max-width: 300px;">
+                    <option value="">Loading bots...</option>
+                </select>
+            </div>
+            <div class="status-info" id="status-info">Select a bot and click Start to begin demonstration</div>
+        </div>
+        
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div>Points</div>
+                <div class="stat-value" id="points">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Rage</div>
+                <div class="stat-value" id="rage">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Time</div>
+                <div class="stat-value" id="time">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Spikes</div>
+                <div class="stat-value" id="spikes">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Eaten</div>
+                <div class="stat-value" id="eaten">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Moves</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+        </div>
+        
+        <div class="last-move" id="last-move" style="display:none;">
+            Last Move: <span id="last-move-text">-</span>
+        </div>
+        
+        <div class="game-map" id="game-map">
+            <div style="text-align: center; padding: 50px;">
+                🤖 Bot Demo Ready<br>
+                Click "Start Bot Demo" to begin
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="menu-btn start-btn" id="start-btn" onclick="startBotDemo()">▶️ Start Bot Demo</button>
+            <button class="menu-btn stop-btn" id="stop-btn" onclick="stopBotDemo()" style="display:none;">⏹️ Stop Demo</button>
+            <button class="menu-btn" onclick="restartBotDemo()">🔄 Restart Demo</button>
+        </div>
+        
+        <div style="margin: 15px 0; text-align: center;">
+            <label for="bot-speed-select" style="margin-right: 10px;">Demo Speed:</label>
+            <select id="bot-speed-select" onchange="changeBotSpeed()" style="padding: 5px 10px; border-radius: 5px; border: none; background: rgba(255,255,255,0.9); color: #333;">
+                <option value="200">🐌 Slow</option>
+                <option value="100">🚶 Normal</option>
+                <option value="50">🏃 Fast</option>
+                <option value="25">⚡ Ultra</option>
+                <option value="10" selected>🚀 Insane</option>
+                <option value="5">💥 Lightning</option>
+                <option value="2">⚡💀 Godspeed</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="game-over-modal hidden">
+        <div class="modal-content">
+            <h2>🤖 Bot Demo Complete!</h2>
+            <div class="final-score" id="final-score">0</div>
+            <p id="demo-result">The bot has finished playing!</p>
+            <button class="menu-btn start-btn" onclick="runAnotherDemo()">🔄 Run Another Demo</button>
+            <button class="menu-btn" onclick="goHome()">🏠 Main Menu</button>
+        </div>
+    </div>
+    
+    <script>
+        let botActive = false;
+        let botInterval = null;
+        let botSpeed = 10; // milliseconds between bot moves (Insane speed as default)
+        let moveCount = 0;
+        
+        // Initialize when page loads
+        window.onload = function() {
+            loadAvailableBots();
+        };
+        
+        function loadAvailableBots() {
+            fetch('/get_bots')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const botSelect = document.getElementById('bot-select');
+                    botSelect.innerHTML = '<option value="">Choose a bot...</option>';
+                    
+                    // Add built-in bots section
+                    if (data.builtin_bots && data.builtin_bots.length > 0) {
+                        const builtinGroup = document.createElement('optgroup');
+                        builtinGroup.label = '🤖 Built-in Bots';
+                        
+                        data.builtin_bots.forEach(bot => {
+                            const option = document.createElement('option');
+                            option.value = bot.key;
+                            option.textContent = bot.display_name;
+                            builtinGroup.appendChild(option);
+                        });
+                        
+                        botSelect.appendChild(builtinGroup);
+                    }
+                    
+                    // Add custom bots section
+                    if (data.custom_bots && data.custom_bots.length > 0) {
+                        const customGroup = document.createElement('optgroup');
+                        customGroup.label = '⚙️ Your Custom Bot';
+                        
+                        data.custom_bots.forEach(bot => {
+                            const option = document.createElement('option');
+                            option.value = bot.key;
+                            option.textContent = bot.display_name;
+                            customGroup.appendChild(option);
+                        });
+                        
+                        botSelect.appendChild(customGroup);
+                    }
+                    
+                    // Select first bot by default if available
+                    if (data.builtin_bots && data.builtin_bots.length > 0) {
+                        botSelect.value = data.builtin_bots[0].key;
+                    } else if (data.custom_bots && data.custom_bots.length > 0) {
+                        botSelect.value = data.custom_bots[0].key;
+                    }
+                } else {
+                    document.getElementById('bot-select').innerHTML = '<option value="">No bots available</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading bots:', error);
+                document.getElementById('bot-select').innerHTML = '<option value="">Error loading bots</option>';
+            });
+        }
+        
+        function startBotDemo() {
+            const selectedBot = document.getElementById('bot-select').value;
+            const speedMs = parseInt(document.getElementById('bot-speed-select').value);
+            
+            // Convert speed in ms to speed level index
+            const speedMapping = {
+                200: 0, // Slow
+                100: 1, // Normal  
+                50: 2,  // Fast
+                25: 2,  // Ultra (use Fast)
+                10: 3,  // Insane
+                5: 4,   // Lightning
+                2: 5    // Godspeed
+            };
+            
+            const speedLevel = speedMapping[speedMs] || 3; // Default to Insane
+            
+            if (!selectedBot) {
+                alert('Please select a bot first!');
+                return;
+            }
+            
+            fetch('/start_bot_demo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'bot_key': selectedBot,
+                    'speed_level': speedLevel
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('bot-name').textContent = `🤖 ${data.bot_name}`;
+                    document.getElementById('status-info').textContent = `${data.bot_name} (${data.bot_key}) is playing...`;
+                    
+                    // Hide bot selection during game
+                    document.getElementById('bot-selection').style.display = 'none';
+                    
+                    // Update initial display
+                    updateMapDisplay(data.map);
+                    updateGameDisplay(data.game_state);
+                    
+                    // Start bot movement
+                    botActive = true;
+                    moveCount = 0;
+                    document.getElementById('start-btn').style.display = 'none';
+                    document.getElementById('stop-btn').style.display = 'inline-block';
+                    document.getElementById('last-move').style.display = 'block';
+                    
+                    startBotMovement();
+                } else {
+                    alert('Failed to start bot demo: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error starting bot demo:', error);
+                alert('Error starting bot demo');
+            });
+        }
+        
+        function startBotMovement() {
+            if (botInterval) {
+                clearInterval(botInterval);
+            }
+            
+            botInterval = setInterval(() => {
+                if (botActive) {
+                    makeBotMove();
+                }
+            }, botSpeed);
+        }
+        
+        function makeBotMove() {
+            if (!botActive) return;
+            
+            fetch('/bot_move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    moveCount++;
+                    document.getElementById('moves').textContent = moveCount;
+                    
+                    // Update display
+                    if (data.map) {
+                        updateMapDisplay(data.map);
+                    }
+                    
+                    if (data.game_state) {
+                        updateGameDisplay(data.game_state);
+                    }
+                    
+                    if (data.last_move) {
+                        document.getElementById('last-move-text').textContent = data.last_move.toUpperCase();
+                    }
+                    
+                    if (data.game_over) {
+                        botActive = false;
+                        stopBotMovement();
+                        showGameOver(data.final_score);
+                    }
+                } else {
+                    console.log('Bot move failed:', data.message);
+                    if (data.message.includes('No active bot demo')) {
+                        botActive = false;
+                        stopBotMovement();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error making bot move:', error);
+            });
+        }
+        
+        function stopBotDemo() {
+            botActive = false;
+            stopBotMovement();
+            document.getElementById('status-info').textContent = 'Bot demo stopped - Select a bot to start again';
+            document.getElementById('start-btn').style.display = 'inline-block';
+            document.getElementById('stop-btn').style.display = 'none';
+            document.getElementById('last-move').style.display = 'none';
+            document.getElementById('bot-selection').style.display = 'block';
+            document.getElementById('bot-name').textContent = '🤖 Select Your Bot';
+        }
+        
+        function stopBotMovement() {
+            if (botInterval) {
+                clearInterval(botInterval);
+                botInterval = null;
+            }
+        }
+        
+        function restartBotDemo() {
+            // Hide modal first
+            document.getElementById('game-over-modal').classList.add('hidden');
+            
+            // Stop current demo
+            stopBotDemo();
+            
+            // Restart demo with same settings
+            setTimeout(() => {
+                startBotDemo();
+            }, 200);
+        }
+        
+        function runAnotherDemo() {
+            // Hide modal first
+            document.getElementById('game-over-modal').classList.add('hidden');
+            
+            // Stop current demo
+            stopBotDemo();
+            
+            // Reset UI - kembali ke interface pemilihan bot
+            document.getElementById('status').innerHTML = '<div class="status-ready">🎮 Ready to start new demo! Select bot and speed, then click Start Demo.</div>';
+        }
+        
+        function updateGameDisplay(gameState) {
+            document.getElementById('points').textContent = gameState.point;
+            document.getElementById('rage').textContent = gameState.rage;
+            document.getElementById('time').textContent = gameState.sp;
+            document.getElementById('spikes').textContent = gameState.spike_count;
+            document.getElementById('eaten').textContent = gameState.eated;
+        }
+        
+        function updateMapDisplay(mapArray) {
+            const gameMap = document.getElementById('game-map');
+            let mapHtml = '';
+            
+            mapArray.forEach(row => {
+                let rowHtml = '';
+                for (let i = 0; i < row.length; i++) {
+                    const char = row.charAt(i);
+                    if (char === 'O') {
+                        rowHtml += '<span class="hero">O</span>';
+                    } else if (char === '$') {
+                        rowHtml += '<span class="dollar">$</span>';
+                    } else if (char === '*') {
+                        rowHtml += '<span class="spike">*</span>';
+                    } else {
+                        rowHtml += char;
+                    }
+                }
+                mapHtml += rowHtml + '\n';
+            });
+            
+            gameMap.innerHTML = mapHtml;
+        }
+        
+        function showGameOver(finalScore) {
+            document.getElementById('final-score').textContent = finalScore;
+            document.getElementById('demo-result').textContent = `The bot completed ${moveCount} moves and scored ${finalScore} points!`;
+            document.getElementById('game-over-modal').classList.remove('hidden');
+            document.getElementById('start-btn').style.display = 'inline-block';
+            document.getElementById('stop-btn').style.display = 'none';
+            document.getElementById('last-move').style.display = 'none';
+            document.getElementById('bot-selection').style.display = 'block';
+            document.getElementById('bot-name').textContent = '🤖 Select Your Bot';
+        }
+        
+        function goHome() {
+            stopBotDemo();
+            window.location.href = '/';
+        }
+        
+        function goBotBuilder() {
+            stopBotDemo();
+            window.location.href = '/bot_builder';
+        }
+        
+        function changeBotSpeed() {
+            const speedSelect = document.getElementById('bot-speed-select');
+            botSpeed = parseInt(speedSelect.value);
+            
+            // Restart movement with new speed if bot is active
+            if (botActive) {
+                startBotMovement();
+            }
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('game-over-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

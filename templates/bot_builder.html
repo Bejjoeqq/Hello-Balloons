@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balloon Game - Bot Builder</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            min-height: 600px;
+        }
+        
+        .editor-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .demo-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .code-editor {
+            width: 100%;
+            height: 400px;
+            background: #1a1a1a;
+            color: #f8f8f2;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            resize: vertical;
+            tab-size: 4;
+        }
+        
+        .code-editor:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
+        }
+        
+        .template-selector {
+            margin-bottom: 15px;
+        }
+        
+        .template-selector select {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 1em;
+            width: 100%;
+            max-width: 200px;
+        }
+        
+        #speed-select {
+            padding: 6px 10px;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1em;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(45deg, #27ae60, #219a52);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 3px 10px rgba(39, 174, 96, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(45deg, #f39c12, #d35400);
+        }
+        
+        .btn-warning:hover {
+            box-shadow: 0 3px 10px rgba(243, 156, 18, 0.4);
+        }
+        
+        .status-info {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .error-info {
+            background: rgba(231, 76, 60, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .success-info {
+            background: rgba(39, 174, 96, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .game-map {
+            background: #000;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            line-height: 1.1;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            background: rgba(52, 152, 219, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        /* Character styling for the game map */
+        .game-map .hero { color: #00ff00; font-weight: bold; }
+        .game-map .dollar { color: #ff0000; font-weight: bold; }
+        .game-map .spike { color: #ff6b6b; }
+        
+        .instructions {
+            background: rgba(155, 89, 182, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        
+        .bot-name-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Bot Builder - Create Your Own AI</h1>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="goBotDemo()">🎮 Bot Demo</button>
+                <button class="btn" onclick="goHome()">🏠 Main Menu</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- Editor Panel -->
+            <div class="editor-panel">
+                <h2>📝 Code Editor</h2>
+                
+                <div class="template-selector">
+                    <label for="template-select">Template:</label>
+                    <select id="template-select" onchange="loadTemplate()">
+                        <option value="basic">Basic Template</option>
+                        <option value="advanced">Advanced Template</option>
+                        <option value="pathfinding">Pathfinding Template</option>
+                        <option value="smart">Smart Bot Template</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 10px;">
+                    <input type="text" id="bot-name" class="bot-name-input" placeholder="Enter your bot name (e.g., MyAwesomeBot)" value="MyCustomBot">
+                </div>
+                
+                <textarea id="code-editor" class="code-editor" placeholder="Write your bot code here..."></textarea>
+                
+                <div class="controls">
+                    <button class="btn btn-success" onclick="validateCode()" title="Check if your code has syntax errors and required functions">✓ Validate Code</button>
+                    <button class="btn btn-primary" onclick="saveBot()" title="Save your bot to be available in Bot Demo list">💾 Save Bot</button>
+                    <button class="btn" onclick="loadTemplate()" title="Load a basic bot template to start from">🔄 Reset Template</button>
+                    <button class="btn btn-danger" onclick="clearEditor()" title="Clear all code from the editor">🗑️ Clear All</button>
+                </div>
+                
+                <div id="validation-result"></div>
+                
+                <div class="instructions">
+                    <h4>📖 Instructions:</h4>
+                    <ul style="text-align: left; font-size: 0.85em;">
+                        <li><strong>checkBot(hero)</strong> - Main function that returns move ('w', 'a', 's', 'd')</li>
+                        <li><strong>hero.getLocation()</strong> - Returns [x, y] position</li>
+                        <li><strong>hero.findLocationDollar()</strong> - Returns [y, x] of dollar</li>
+                        <li><strong>hero.getMove()</strong> - Returns current move direction</li>
+                        <li><strong>hero.spikeCheck(move)</strong> - Check if move hits spike</li>
+                        <li><strong>hero.eatCheck(move)</strong> - Check if move collects dollar</li>
+                        <li>Use Python syntax and logic</li>
+                        <li>Return one of: 'w' (up), 'a' (left), 's' (down), 'd' (right)</li>
+                    </ul>
+                    
+                    <h4>🔧 Button Functions:</h4>
+                    <ul style="text-align: left; font-size: 0.85em;">
+                        <li><strong>✓ Validate Code</strong> - Only checks syntax and required functions (no game demo)</li>
+                        <li><strong>🧪 Test Bot</strong> - Runs a live demo to see your bot play the game</li>
+                        <li><strong>💾 Save Bot</strong> - Saves your bot to appear in Bot Demo selection</li>
+                    </ul>
+                </div>
+                
+                <div class="instructions">
+                    <h4>🛠️ Available Built-in Functions:</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.8em;">
+                        <div>
+                            <strong>Math Functions:</strong><br>
+                            • abs(x) - Absolute value<br>
+                            • max(a, b) - Maximum<br>
+                            • min(a, b) - Minimum<br>
+                            • sum(list) - Sum of list<br>
+                        </div>
+                        <div>
+                            <strong>Data Types:</strong><br>
+                            • int(x) - Convert to integer<br>
+                            • float(x) - Convert to float<br>
+                            • str(x) - Convert to string<br>
+                            • bool(x) - Convert to boolean<br>
+                        </div>
+                        <div>
+                            <strong>Collections:</strong><br>
+                            • list() - Create list<br>
+                            • dict() - Create dictionary<br>
+                            • tuple() - Create tuple<br>
+                            • set() - Create set<br>
+                        </div>
+                        <div>
+                            <strong>Utilities:</strong><br>
+                            • len(x) - Length of object<br>
+                            • range(n) - Number sequence<br>
+                            • enumerate(list) - Index+value<br>
+                            • sorted(list) - Sort list<br>
+                        </div>
+                        <div>
+                            <strong>Random Module:</strong><br>
+                            • random.choice(list)<br>
+                            • random.randint(a, b)<br>
+                            • random.random()<br>
+                            • random.shuffle(list)<br>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(52, 152, 219, 0.15); border-radius: 8px; border-left: 4px solid #3498db;">
+                        <h4>🤝 Contribute to Built-in Bots</h4>
+                        <p style="margin: 5px 0; font-size: 0.9em;">
+                            Want to add your bot as a built-in option? Contribute directly to our GitHub repository! 
+                            Your bot algorithms can become part of the official bot collection.
+                        </p>
+                        <div style="text-align: center; margin-top: 10px;">
+                            <a href="https://github.com/Bejjoeqq/Hello-Balloons" target="_blank" 
+                               style="display: inline-block; padding: 8px 15px; background: linear-gradient(45deg, #2c3e50, #34495e); 
+                                      color: white; text-decoration: none; border-radius: 5px; font-size: 0.9em;">
+                                🐙 Visit GitHub Repository
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Demo Panel -->
+            <div class="demo-panel">
+                <h2>🎮 Live Demo</h2>
+                
+                <div class="controls">
+                    <button class="btn btn-warning" id="test-bot-btn" onclick="testBot()" title="Run a live demo to see how your bot performs in the game">🧪 Test Bot</button>
+                    <button class="btn" onclick="resetDemo()">🔄 Reset</button>
+                </div>
+                
+                <div style="margin: 10px 0;">
+                    <label for="speed-select">Demo Speed:</label>
+                    <select id="speed-select" onchange="changeSpeed()">
+                        <option value="300">🐌 Slow</option>
+                        <option value="150">🚶 Normal</option>
+                        <option value="75">🏃 Fast</option>
+                        <option value="30">⚡ Ultra</option>
+                        <option value="15" selected>🚀 Insane</option>
+                        <option value="8">💥 Lightning</option>
+                        <option value="5">⚡💀 Godspeed</option>
+                    </select>
+                </div>
+                
+                <div id="demo-status" class="status-info">Ready to test your bot! Write code and click "Test Bot"</div>
+                
+                <div class="stats" id="stats">
+                    <div class="stat-item">
+                        <div>Points</div>
+                        <div class="stat-value" id="points">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Time</div>
+                        <div class="stat-value" id="time">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Moves</div>
+                        <div class="stat-value" id="moves">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Status</div>
+                        <div class="stat-value" id="bot-status">Ready</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Speed</div>
+                        <div class="stat-value" id="current-speed">Normal</div>
+                    </div>
+                </div>
+                
+                <div class="game-map" id="game-map">
+                    <div style="text-align: center; padding: 50px; color: #666;">
+                        🤖 Bot Demo Area<br>
+                        Code your bot and test it to see it in action!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let customBotActive = false;
+        let customBotInterval = null;
+        let customBotSpeed = 15; // Default to Insane speed
+        let moveCount = 0;
+        
+        const templates = {
+            basic: `def checkBot(hero):
+    """
+    Basic bot template - moves towards dollar
+    """
+    # Get current position
+    hero_pos = hero.getLocation()  # [x, y]
+    
+    # Get dollar position
+    dollar_y, dollar_x = hero.findLocationDollar()  # [y, x]
+    
+    # Simple logic to move towards dollar
+    if hero_pos[0] < dollar_x:  # Need to move right
+        return 'd'
+    elif hero_pos[0] > dollar_x:  # Need to move left
+        return 'a'
+    elif hero_pos[1] < dollar_y:  # Need to move down
+        return 's'
+    elif hero_pos[1] > dollar_y:  # Need to move up
+        return 'w'
+    else:
+        return 'd'  # Default move`,
+            
+            advanced: `def checkBot(hero):
+    """
+    Advanced bot template - avoids spikes and plans moves
+    """
+    # Get positions
+    hero_pos = hero.getLocation()  # [x, y]
+    dollar_y, dollar_x = hero.findLocationDollar()  # [y, x]
+    
+    # Available moves
+    moves = ['w', 'a', 's', 'd']
+    safe_moves = []
+    
+    # Check each move for safety
+    for move in moves:
+        if not hero.spikeCheck(move):
+            safe_moves.append(move)
+    
+    if not safe_moves:
+        return 'd'  # Emergency move
+    
+    # Among safe moves, choose one towards dollar
+    best_move = safe_moves[0]
+    best_distance = abs(hero_pos[0] - dollar_x) + abs(hero_pos[1] - dollar_y)
+    
+    for move in safe_moves:
+        # Calculate distance after this move
+        new_x, new_y = hero_pos[0], hero_pos[1]
+        if move == 'a': 
+            new_x -= 2
+        elif move == 'd': 
+            new_x += 2
+        elif move == 'w': 
+            new_y -= 1
+        elif move == 's': 
+            new_y += 1
+        
+        distance = abs(new_x - dollar_x) + abs(new_y - dollar_y)
+        if distance < best_distance:
+            best_distance = distance
+            best_move = move
+    
+    return best_move`,
+            
+            pathfinding: `def checkBot(hero):
+    """
+    Pathfinding bot template - uses simple pathfinding algorithm
+    """
+    # Get positions
+    hero_pos = hero.getLocation()  # [x, y]
+    dollar_y, dollar_x = hero.findLocationDollar()  # [y, x]
+    current_move = hero.getMove()
+    
+    # Calculate distances using built-in abs()
+    dx = dollar_x - hero_pos[0]
+    dy = dollar_y - hero_pos[1]
+    
+    # Priority moves based on direction to dollar
+    priority_moves = []
+    
+    # Use built-in max() to determine primary direction
+    if abs(dx) >= abs(dy):
+        # Horizontal movement is priority
+        if dx > 0: 
+            priority_moves.append('d')
+        elif dx < 0: 
+            priority_moves.append('a')
+        # Then vertical
+        if dy > 0: 
+            priority_moves.append('s')
+        elif dy < 0: 
+            priority_moves.append('w')
+    else:
+        # Vertical movement is priority
+        if dy > 0: 
+            priority_moves.append('s')
+        elif dy < 0: 
+            priority_moves.append('w')
+        # Then horizontal
+        if dx > 0: 
+            priority_moves.append('d')
+        elif dx < 0: 
+            priority_moves.append('a')
+    
+    # Add remaining moves
+    all_moves = ['w', 'a', 's', 'd']
+    for move in all_moves:
+        if move not in priority_moves:
+            priority_moves.append(move)
+    
+    # Choose first safe move from priority list
+    for move in priority_moves:
+        if not hero.spikeCheck(move):
+            return move
+    
+    # Emergency: continue current direction or default
+    if current_move and current_move in all_moves:
+        return current_move
+    
+    return 'd'`,
+            
+            smart: `def checkBot(hero):
+    """
+    Smart bot template - demonstrates built-in functions safely
+    """
+    # Get current state
+    hero_pos = hero.getLocation()  # [x, y]
+    dollar_y, dollar_x = hero.findLocationDollar()  # [y, x]
+    current_move = hero.getMove()
+    
+    # Calculate distances for each move
+    all_moves = ['w', 'a', 's', 'd']
+    move_scores = []
+    
+    for move in all_moves:
+        # Calculate new position after move
+        new_x, new_y = hero_pos[0], hero_pos[1]
+        if move == 'a': 
+            new_x -= 2
+        elif move == 'd': 
+            new_x += 2
+        elif move == 'w': 
+            new_y -= 1
+        elif move == 's': 
+            new_y += 1
+        
+        # Calculate distance to dollar using abs()
+        distance = abs(new_x - dollar_x) + abs(new_y - dollar_y)
+        
+        # Check safety and calculate score
+        is_safe = not hero.spikeCheck(move)
+        will_eat = hero.eatCheck(move)
+        
+        if will_eat:
+            score = 1000  # Highest priority
+        elif is_safe:
+            score = max(0, 100 - distance)  # Distance-based score
+        else:
+            score = -1000  # Avoid spikes
+        
+        move_scores.append((move, score))
+    
+    # Sort by score and get best move
+    move_scores.sort(key=lambda x: x[1], reverse=True)
+    best_move = move_scores[0][0]
+    
+    return best_move`
+        };
+        
+        // Initialize
+        window.onload = function() {
+            loadTemplate();
+            changeSpeed(); // Set initial speed display
+        };
+        
+        function loadTemplate() {
+            const template = document.getElementById('template-select').value;
+            document.getElementById('code-editor').value = templates[template];
+            clearValidation();
+        }
+        
+        function clearEditor() {
+            document.getElementById('code-editor').value = '';
+            clearValidation();
+        }
+        
+        function clearValidation() {
+            document.getElementById('validation-result').innerHTML = '';
+        }
+        
+        function changeSpeed() {
+            const speedSelect = document.getElementById('speed-select');
+            customBotSpeed = parseInt(speedSelect.value);
+            
+            // Update speed display
+            const speedNames = {
+                '300': 'Slow',
+                '150': 'Normal', 
+                '75': 'Fast',
+                '30': 'Ultra',
+                '15': 'Insane',
+                '8': 'Lightning',
+                '5': 'Godspeed'
+            };
+            document.getElementById('current-speed').textContent = speedNames[speedSelect.value] || 'Normal';
+            
+            // Restart movement with new speed if bot is active
+            if (customBotActive) {
+                startCustomBotMovement();
+            }
+        }
+        
+        function validateCode() {
+            const code = document.getElementById('code-editor').value;
+            const botName = document.getElementById('bot-name').value || 'MyCustomBot';
+            
+            if (!code.trim()) {
+                showValidationResult('Please write some code first!', 'error');
+                return;
+            }
+            
+            if (!botName.trim()) {
+                showValidationResult('Please enter a bot name!', 'error');
+                return;
+            }
+            
+            fetch('/validate_custom_bot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code: code,
+                    bot_name: botName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showValidationResult('✅ Code validation passed! Your bot is ready to test.', 'success');
+                } else {
+                    showValidationResult('❌ Validation failed: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showValidationResult('❌ Validation error: ' + error, 'error');
+            });
+        }
+        
+        function showValidationResult(message, type) {
+            const resultDiv = document.getElementById('validation-result');
+            const className = type === 'success' ? 'success-info' : 'error-info';
+            resultDiv.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+        
+        function saveBot() {
+            const code = document.getElementById('code-editor').value.trim();
+            const botName = document.getElementById('bot-name').value.trim();
+            
+            if (!code) {
+                showValidationResult('❌ Please write some code first!', 'error');
+                return;
+            }
+            
+            if (!botName) {
+                showValidationResult('❌ Please enter a bot name!', 'error');
+                return;
+            }
+            
+            fetch('/save_custom_bot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code: code,
+                    bot_name: botName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showValidationResult(`✅ ${data.message} You can now find it in the Bot Demo list!`, 'success');
+                } else {
+                    showValidationResult('❌ Save failed: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showValidationResult('❌ Save error: ' + error, 'error');
+            });
+        }
+        
+        function testBot() {
+            // Test Bot akan selalu restart demo untuk menguji bot
+            // Stop demo yang sedang berjalan jika ada
+            if (customBotActive) {
+                stopCustomBotDemo();
+            }
+            
+            // Tunggu sebentar lalu start demo baru
+            setTimeout(() => {
+                startCustomBotDemo();
+            }, 500);
+        }
+        
+        function startCustomBotDemo() {
+            const code = document.getElementById('code-editor').value;
+            const botName = document.getElementById('bot-name').value || 'MyCustomBot';
+            const speedMs = parseInt(document.getElementById('speed-select').value);
+            
+            // Convert milliseconds to speed level index
+            const speedMap = {
+                300: 0,  // Slow
+                150: 1,  // Normal
+                75: 2,   // Fast
+                30: 3,   // Insane
+                15: 3,   // Insane (same as 30 for now)
+                8: 4,    // Lightning
+                5: 5     // Godspeed
+            };
+            const speedLevel = speedMap[speedMs] || 3; // Default to Insane
+            
+            if (!code.trim()) {
+                showDemoStatus('Please write some code first!', 'error');
+                return;
+            }
+            
+            fetch('/start_custom_bot_demo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code: code,
+                    bot_name: botName,
+                    speed_level: speedLevel
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showDemoStatus(`🤖 ${botName} is running...`, 'success');
+                    
+                    // Update display
+                    updateMapDisplay(data.map);
+                    updateGameDisplay(data.game_state);
+                    
+                    // Start bot demo
+                    customBotActive = true;
+                    moveCount = 0;
+                    document.getElementById('bot-status').textContent = 'Running';
+                    
+                    startCustomBotMovement();
+                } else {
+                    showDemoStatus('❌ Failed to test bot: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showDemoStatus('❌ Demo start error: ' + error, 'error');
+            });
+        }
+        
+        function startCustomBotMovement() {
+            if (customBotInterval) {
+                clearInterval(customBotInterval);
+            }
+            
+            customBotInterval = setInterval(() => {
+                if (customBotActive) {
+                    makeCustomBotMove();
+                }
+            }, customBotSpeed);
+        }
+        
+        function makeCustomBotMove() {
+            if (!customBotActive) return;
+            
+            fetch('/custom_bot_move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    moveCount++;
+                    document.getElementById('moves').textContent = moveCount;
+                    
+                    // Update display
+                    if (data.map) {
+                        updateMapDisplay(data.map);
+                    }
+                    
+                    if (data.game_state) {
+                        updateGameDisplay(data.game_state);
+                    }
+                    
+                    if (data.game_over) {
+                        customBotActive = false;
+                        stopCustomBotMovement();
+                        showDemoStatus(`🏁 Demo finished! Final score: ${data.final_score}`, 'success');
+                        document.getElementById('bot-status').textContent = 'Finished';
+                    }
+                } else {
+                    showDemoStatus('❌ Bot move failed: ' + data.message, 'error');
+                    if (data.message.includes('No active')) {
+                        stopCustomBotDemo();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Bot move error:', error);
+            });
+        }
+        
+        function stopCustomBotDemo() {
+            customBotActive = false;
+            stopCustomBotMovement();
+            showDemoStatus('Demo stopped', 'status');
+            document.getElementById('bot-status').textContent = 'Stopped';
+        }
+        
+        function stopCustomBotMovement() {
+            if (customBotInterval) {
+                clearInterval(customBotInterval);
+                customBotInterval = null;
+            }
+        }
+        
+        function resetDemo() {
+            stopCustomBotDemo();
+            moveCount = 0;
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('points').textContent = '0';
+            document.getElementById('time').textContent = '0';
+            document.getElementById('bot-status').textContent = 'Ready';
+            showDemoStatus('Ready to test your bot!', 'status');
+            
+            // Reset map display
+            document.getElementById('game-map').innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #666;">
+                    🤖 Bot Demo Area<br>
+                    Code your bot and test it to see it in action!
+                </div>
+            `;
+        }
+        
+        function showDemoStatus(message, type) {
+            const statusDiv = document.getElementById('demo-status');
+            let className = 'status-info';
+            if (type === 'error') className = 'error-info';
+            else if (type === 'success') className = 'success-info';
+            
+            statusDiv.className = className;
+            statusDiv.textContent = message;
+        }
+        
+        function updateGameDisplay(gameState) {
+            document.getElementById('points').textContent = gameState.point;
+            document.getElementById('time').textContent = gameState.sp;
+        }
+        
+        function updateMapDisplay(mapArray) {
+            const gameMap = document.getElementById('game-map');
+            let mapHtml = '';
+            
+            mapArray.forEach(row => {
+                let rowHtml = '';
+                for (let i = 0; i < row.length; i++) {
+                    const char = row.charAt(i);
+                    if (char === 'O') {
+                        rowHtml += '<span class="hero">O</span>';
+                    } else if (char === '$') {
+                        rowHtml += '<span class="dollar">$</span>';
+                    } else if (char === '*') {
+                        rowHtml += '<span class="spike">*</span>';
+                    } else {
+                        rowHtml += char;
+                    }
+                }
+                mapHtml += rowHtml + '\n';
+            });
+            
+            gameMap.innerHTML = mapHtml;
+        }
+        
+        function goHome() {
+            stopCustomBotDemo();
+            window.location.href = '/';
+        }
+        
+        function goBotDemo() {
+            stopCustomBotDemo();
+            window.location.href = '/bot_demo';
+        }
+    </script>
+</body>
+</html>

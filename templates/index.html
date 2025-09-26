@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balloon Game</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #fff;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+        }
+        
+        .menu-item {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            border: none;
+            color: white;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            width: 200px;
+            margin: 10px auto;
+        }
+        
+        .menu-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .info-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #4ecdc4;
+        }
+        
+        .leaderboard {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+        
+        .rank-1 { color: #ffd700; }
+        .rank-2 { color: #c0c0c0; }
+        .rank-3 { color: #cd7f32; }
+        
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin: 20px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .game-instructions {
+            background: rgba(52, 152, 219, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎈 Balloon Game 🎈</h1>
+        
+        <div id="main-menu">
+            <button class="menu-item" onclick="showPlayForm()">🎮 Play Game</button>
+            <button class="menu-item" onclick="showRecentScores()">📊 Recent Scores</button>
+            <button class="menu-item" onclick="showLeaderboard()">🏆 Leaderboard</button>
+            <button class="menu-item" onclick="showInstructions()">ℹ️ Game Info</button>
+            <button class="menu-item" onclick="showBotDemo()">🤖 Watch Bot Play</button>
+            <button class="menu-item" onclick="goBotBuilder()">🔧 Build Your Bot</button>
+        </div>
+        
+        <!-- Development Info -->
+        <div class="game-instructions" style="margin-top: 30px; background: rgba(255, 193, 7, 0.2); border-left-color: #ffc107;">
+            <h3>ℹ️ Development Status</h3>
+            <p><strong>🚧 This game is currently in development phase</strong></p>
+            <ul style="text-align: left; margin: 10px 0;">
+                <li>📱 <strong>Local Storage Only:</strong> All scores and data are stored locally on your device</li>
+                <li>🔄 <strong>Data Persistence:</strong> Your progress may be lost if you clear browser data</li>
+                <li>🎯 <strong>Active Development:</strong> New features and improvements are being added regularly</li>
+                <li>🐛 <strong>Bug Reports:</strong> Please report any issues you encounter</li>
+            </ul>
+            <p style="margin-top: 15px;">
+                <a href="https://github.com/Bejjoeqq/Hello-Balloons" target="_blank" 
+                   style="color: #ffc107; text-decoration: none; font-weight: bold;">
+                    🐙 Contribute on GitHub →
+                </a>
+            </p>
+        </div>
+        
+        <div id="play-form" class="hidden">
+            <h2>Start New Game</h2>
+            <div class="form-group">
+                <label for="player-name">Your Name:</label>
+                <input type="text" id="player-name" placeholder="Enter your name" value="Player">
+            </div>
+            <button class="menu-item" onclick="startGame()">🚀 Start Game</button>
+            <button class="menu-item" onclick="showMainMenu()">🔙 Back</button>
+        </div>
+        
+        <div id="recent-scores" class="hidden">
+            <h2>📊 Recent Scores</h2>
+            <div id="recent-scores-content"></div>
+            <button class="menu-item" onclick="showMainMenu()">🔙 Back</button>
+        </div>
+        
+        <div id="leaderboard" class="hidden">
+            <h2>🏆 Leaderboard</h2>
+            <div class="leaderboard" id="leaderboard-content"></div>
+            <button class="menu-item" onclick="showMainMenu()">🔙 Back</button>
+        </div>
+        
+        <div id="instructions" class="hidden">
+            <h2>ℹ️ Game Information</h2>
+            <div class="game-instructions">
+                <h3>🎯 Objective</h3>
+                <p>Navigate your balloon (O) to collect dollars ($) while avoiding spikes (*)!</p>
+                
+                <h3>🎮 Controls</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">W = Up</div>
+                    <div class="stat-card">A = Left</div>
+                    <div class="stat-card">S = Down</div>
+                    <div class="stat-card">D = Right</div>
+                </div>
+                
+                <h3>⚠️ Warning</h3>
+                <p>When you collect a dollar, a spike will spawn at the previous dollar location!</p>
+                <pre>
+* * *          * * *
+O $     ->     * O
+* * *          * * *
+                </pre>
+                
+                <h3>💰 Scoring</h3>
+                <ul>
+                    <li>Base points per dollar: 20</li>
+                    <li>Bonus points from rage and time</li>
+                    <li>Rage bonus lasts 50 moves after collecting</li>
+                    <li>Special bonuses every 9th dollar and 4th spike</li>
+                </ul>
+            </div>
+            <button class="menu-item" onclick="showMainMenu()">🔙 Back</button>
+        </div>
+        
+        <div id="bot-demo" class="hidden">
+            <h2>🤖 Bot Demo</h2>
+            <div id="bot-demo-content">
+                <div class="info-box">
+                    <h3>🎮 Watch AI Bot Play</h3>
+                    <p>Experience how our AI bot navigates the balloon game!</p>
+                    <ul style="text-align: left; margin: 20px 0;">
+                        <li>✅ Real-time bot gameplay</li>
+                        <li>✅ Watch decision making process</li>
+                        <li>✅ See advanced strategies</li>
+                        <li>✅ Learn from AI techniques</li>
+                    </ul>
+                </div>
+                <button class="menu-item" onclick="startBotDemo()">🚀 Watch Bot Demo</button>
+            </div>
+            <button class="menu-item" onclick="showMainMenu()">🔙 Back</button>
+        </div>
+    </div>
+    
+    <script>
+        function showMainMenu() {
+            hideAllSections();
+            document.getElementById('main-menu').classList.remove('hidden');
+        }
+        
+        function showPlayForm() {
+            hideAllSections();
+            document.getElementById('play-form').classList.remove('hidden');
+        }
+        
+        function showRecentScores() {
+            hideAllSections();
+            document.getElementById('recent-scores').classList.remove('hidden');
+            loadRecentScores();
+        }
+        
+        function showLeaderboard() {
+            hideAllSections();
+            document.getElementById('leaderboard').classList.remove('hidden');
+            loadLeaderboard();
+        }
+        
+        function showInstructions() {
+            hideAllSections();
+            document.getElementById('instructions').classList.remove('hidden');
+        }
+        
+        function showBotDemo() {
+            hideAllSections();
+            document.getElementById('bot-demo').classList.remove('hidden');
+        }
+        
+        function hideAllSections() {
+            const sections = ['main-menu', 'play-form', 'recent-scores', 'leaderboard', 'instructions', 'bot-demo'];
+            sections.forEach(section => {
+                document.getElementById(section).classList.add('hidden');
+            });
+        }
+        
+        function startGame() {
+            const playerName = document.getElementById('player-name').value || 'Anonymous';
+            const speedLevel = 1; // Default to normal speed
+            
+            fetch('/start_game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    player_name: playerName,
+                    speed_level: speedLevel
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/game';
+                } else {
+                    alert('Failed to start game: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to start game');
+            });
+        }
+        
+        function loadRecentScores() {
+            fetch('/recent_scores')
+            .then(response => response.json())
+            .then(data => {
+                const content = document.getElementById('recent-scores-content');
+                if (data.success) {
+                    if (data.scores.length > 0) {
+                        let html = `<div class="info-box">`;
+                        html += `<h3>Player: ${data.player_name}</h3>`;
+                        html += `<h4>Scores: ${data.scores.join(', ')}</h4>`;
+                        html += `</div>`;
+                        content.innerHTML = html;
+                    } else {
+                        content.innerHTML = '<div class="info-box">No games played yet!</div>';
+                    }
+                } else {
+                    content.innerHTML = '<div class="info-box">No recent scores available</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('recent-scores-content').innerHTML = '<div class="info-box">Error loading scores</div>';
+            });
+        }
+        
+        function loadLeaderboard() {
+            fetch('/leaderboard')
+            .then(response => response.json())
+            .then(data => {
+                const content = document.getElementById('leaderboard-content');
+                if (data.success) {
+                    let html = '';
+                    data.leaderboard.forEach(entry => {
+                        const rankClass = entry.rank <= 3 ? `rank-${entry.rank}` : '';
+                        html += `<div class="leaderboard-item ${rankClass}">`;
+                        html += `<span>${entry.rank}. ${entry.name}</span>`;
+                        html += `<span>${entry.score}</span>`;
+                        html += `</div>`;
+                    });
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div>Error loading leaderboard</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('leaderboard-content').innerHTML = '<div>Error loading leaderboard</div>';
+            });
+        }
+        
+        function startBotDemo() {
+            // Redirect to dedicated bot demo page
+            window.location.href = '/bot_demo';
+        }
+        
+        function goBotBuilder() {
+            // Redirect to bot builder page
+            window.location.href = '/bot_builder';
+        }
+    </script>
+</body>
+</html>

@@ -18,6 +18,14 @@ class Hero(Map):
     
     def setMove(self, move: str):
         self.currentMove = move
+    
+    def hasMove(self) -> bool:
+        return self.currentMove != ""
+    
+    def moveWithAutoDirection(self) -> list:
+        if not self.hasMove():
+            return [True, False]  # No movement, but game continues
+        return self.move()  # Use existing move logic
 
     def __updateMove(self, item: str):
         if self.currentMove == "a":
@@ -78,7 +86,6 @@ class Hero(Map):
             self.__updateMove("*")
             if self.__stuckCase():
                 self.__updateStuck()
-                input("You are stuck! Press Enter to continue...")
             return [True, True]
         elif self.__moveCheck("*"):
             return [False, False]

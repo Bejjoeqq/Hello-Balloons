@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balloon Game - Play</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: auto;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            background: rgba(52, 152, 219, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .game-map {
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.2;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 300px;
+            margin: 20px auto;
+        }
+        
+        .control-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            border: none;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: bold;
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .empty-cell {
+            grid-column: span 1;
+        }
+        
+        .menu-btn {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1em;
+        }
+        
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(155, 89, 182, 0.4);
+        }
+        
+        .game-over-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content h2 {
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        
+        .final-score {
+            font-size: 2em;
+            color: #ffd700;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .location-info {
+            background: rgba(46, 204, 113, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .instructions {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .speed-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            margin: 0 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9em;
+        }
+        
+        .speed-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4);
+        }
+        
+        .speed-btn.active {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4);
+        }
+        
+        /* Character styling for the game map */
+        .game-map .hero { color: #00ff00; font-weight: bold; }
+        .game-map .dollar { color: #ff0000; font-weight: bold; }
+        .game-map .spike { color: #ff6b6b; }
+        .game-map .empty { color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-header">
+            <h1>🎈 Balloon Game</h1>
+            <button class="menu-btn" onclick="goHome()">🏠 Main Menu</button>
+        </div>
+        
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div>Points</div>
+                <div class="stat-value" id="points">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Rage</div>
+                <div class="stat-value" id="rage">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Time</div>
+                <div class="stat-value" id="time">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Best Score</div>
+                <div class="stat-value" id="best-score">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Spikes</div>
+                <div class="stat-value" id="spikes">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Eaten</div>
+                <div class="stat-value" id="eaten">0</div>
+            </div>
+            <div class="stat-item">
+                <div>Speed</div>
+                <div class="stat-value" id="current-speed">Normal</div>
+            </div>
+        </div>
+        
+        <div class="location-info">
+            <span>Dollar Location: (<span id="dollar-x">0</span>, <span id="dollar-y">0</span>)</span>
+        </div>
+        
+        <div class="game-map" id="game-map">
+            Loading game...
+        </div>
+        
+        <div class="instructions">
+            <strong>Movement:</strong> Use WASD keys or click buttons to move your balloon (O)<br>
+            <strong>Goal:</strong> Collect dollars ($) while avoiding spikes (*)<br>
+            <strong>Speed:</strong> Use buttons below or press 1-5 keys to change speed<br>
+            <div style="margin-top: 10px;">
+                <strong>Speed Control:</strong>
+                <button class="speed-btn" onclick="changeSpeed(0)">🐌 1-Slow</button>
+                <button class="speed-btn" onclick="changeSpeed(1)">🚶 2-Normal</button>
+                <button class="speed-btn" onclick="changeSpeed(2)">🏃 3-Fast</button>
+                <button class="speed-btn" onclick="changeSpeed(3)">⚡ 4-Ultra</button>
+                <button class="speed-btn" onclick="changeSpeed(4)">🚀 5-Insane</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="empty-cell"></div>
+            <button class="control-btn" id="up-btn" onclick="makeMove('w')">↑<br>W</button>
+            <div class="empty-cell"></div>
+            <button class="control-btn" id="left-btn" onclick="makeMove('a')">←<br>A</button>
+            <button class="control-btn" id="down-btn" onclick="makeMove('s')">↓<br>S</button>
+            <button class="control-btn" id="right-btn" onclick="makeMove('d')">→<br>D</button>
+        </div>
+    </div>
+    
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="game-over-modal hidden">
+        <div class="modal-content">
+            <h2>🎮 Game Over!</h2>
+            <div class="final-score" id="final-score">0</div>
+            <p>Great job playing the Balloon Game!</p>
+            <button class="menu-btn" onclick="startNewGame()">🔄 Play Again</button>
+            <button class="menu-btn" onclick="goHome()">🏠 Main Menu</button>
+        </div>
+    </div>
+    
+    <script>
+        let gameActive = true;
+        let autoMoveInterval = null;
+        let gameSpeed = 200; // milliseconds between auto moves (default to faster)
+        let currentSpeedLevel = 1; // 0=slow, 1=normal, 2=fast, 3=ultra, 4=insane
+        const speedLevels = [500, 200, 100, 50, 25]; // milliseconds for each speed level
+        let gameState = null;
+        let sessionId = null;
+        let currentPlayerName = 'Player';
+        
+        // Initialize game when page loads
+        window.onload = function() {
+            loadGameState();
+            startAutoMovement();
+        };
+        
+        // Keyboard controls
+        document.addEventListener('keydown', function(event) {
+            if (!gameActive) return;
+            
+            const key = event.key.toLowerCase();
+            if (['w', 'a', 's', 'd'].includes(key)) {
+                event.preventDefault();
+                makeMove(key);
+            } else if (['1', '2', '3', '4', '5'].includes(event.key)) {
+                // Speed control with number keys
+                event.preventDefault();
+                const speedLevel = parseInt(event.key) - 1;
+                changeSpeed(speedLevel);
+            }
+        });
+        
+        function loadGameState() {
+            fetch('/get_game_state')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.game_state) {
+                    gameState = data.game_state;
+                    currentPlayerName = data.player_name || 'Player';
+                    sessionId = data.session_id;
+                    
+                    updateGameDisplay(data.game_state);
+                    // Load the current map
+                    if (data.map) {
+                        updateMapDisplay(data.map);
+                    }
+                    // Set initial speed button as active
+                    changeSpeed(currentSpeedLevel);
+                } else {
+                    // No active game, redirect to home
+                    window.location.href = '/';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading game state:', error);
+                alert('Error loading game. Redirecting to main menu.');
+                window.location.href = '/';
+            });
+        }
+        
+
+        
+        function makeMove(move) {
+            if (!gameActive) return;
+            
+            // This will set the new direction, movement will continue automatically
+            fetch('/make_move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ move: move })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the map display only if map data is provided
+                    if (data.map) {
+                        updateMapDisplay(data.map);
+                    }
+                    
+                    if (data.game_state) {
+                        updateGameDisplay(data.game_state);
+                    }
+                    
+                    if (data.game_over) {
+                        gameActive = false;
+                        stopAutoMovement();
+                        showGameOver(data.final_score);
+                    }
+                } else {
+                    console.log('Move failed: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error making move:', error);
+            });
+        }
+        
+        function updateGameDisplay(gameState) {
+            document.getElementById('points').textContent = gameState.point;
+            document.getElementById('rage').textContent = gameState.rage;
+            document.getElementById('time').textContent = gameState.sp;
+            document.getElementById('best-score').textContent = gameState.best_score;
+            document.getElementById('spikes').textContent = gameState.spike_count;
+            document.getElementById('eaten').textContent = gameState.eated;
+            
+            if (gameState.dollar_location) {
+                document.getElementById('dollar-x').textContent = gameState.dollar_location.x;
+                document.getElementById('dollar-y').textContent = gameState.dollar_location.y;
+            }
+        }
+        
+        function updateMapDisplay(mapArray) {
+            const gameMap = document.getElementById('game-map');
+            let mapHtml = '';
+            
+            mapArray.forEach(row => {
+                let rowHtml = '';
+                for (let i = 0; i < row.length; i++) {
+                    const char = row.charAt(i);
+                    if (char === 'O') {
+                        rowHtml += '<span class="hero">O</span>';
+                    } else if (char === '$') {
+                        rowHtml += '<span class="dollar">$</span>';
+                    } else if (char === '*') {
+                        rowHtml += '<span class="spike">*</span>';
+                    } else {
+                        rowHtml += char;
+                    }
+                }
+                mapHtml += rowHtml + '\n';
+            });
+            
+            gameMap.innerHTML = mapHtml;
+        }
+        
+        function setControlsEnabled(enabled) {
+            const buttons = ['up-btn', 'left-btn', 'down-btn', 'right-btn'];
+            buttons.forEach(btnId => {
+                document.getElementById(btnId).disabled = !enabled;
+            });
+        }
+        
+        function showGameOver(finalScore) {
+            stopAutoMovement();
+            document.getElementById('final-score').textContent = finalScore;
+            document.getElementById('game-over-modal').classList.remove('hidden');
+        }
+        
+        function startNewGame() {
+            // Hide game over modal
+            document.getElementById('game-over-modal').classList.add('hidden');
+            
+            // Reset game state
+            gameState = null;
+            sessionId = null;
+            
+            // Start fresh game with current player
+            fetch('/start_game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    player_name: currentPlayerName || 'Player',
+                    speed_level: 1 // Use normal speed as default
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the game page to start fresh
+                    window.location.reload();
+                } else {
+                    alert('Failed to start new game: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error starting new game:', error);
+                alert('Error starting new game');
+            });
+        }
+        
+        function goHome() {
+            stopAutoMovement();
+            window.location.href = '/';
+        }
+        
+        function startAutoMovement() {
+            if (autoMoveInterval) {
+                clearInterval(autoMoveInterval);
+            }
+            
+            autoMoveInterval = setInterval(() => {
+                if (gameActive) {
+                    autoMove();
+                }
+            }, gameSpeed);
+        }
+        
+        function stopAutoMovement() {
+            if (autoMoveInterval) {
+                clearInterval(autoMoveInterval);
+                autoMoveInterval = null;
+            }
+        }
+        
+        function autoMove() {
+            if (!gameActive) return;
+            
+            fetch('/auto_move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the map display only if map data is provided
+                    if (data.map) {
+                        updateMapDisplay(data.map);
+                    }
+                    
+                    if (data.game_state) {
+                        updateGameDisplay(data.game_state);
+                    }
+                    
+                    if (data.game_over) {
+                        gameActive = false;
+                        stopAutoMovement();
+                        showGameOver(data.final_score);
+                    }
+                }
+                // Don't show errors for auto moves to avoid spam
+            })
+            .catch(error => {
+                // Silent fail for auto moves
+                console.log('Auto move error:', error);
+            });
+        }
+        
+        function changeSpeed(level) {
+            if (level >= 0 && level < speedLevels.length) {
+                currentSpeedLevel = level;
+                gameSpeed = speedLevels[level];
+                
+                const speedNames = ['Slow', 'Normal', 'Fast', 'Ultra', 'Insane'];
+                
+                // Update speed indicator
+                document.getElementById('current-speed').textContent = speedNames[level];
+                
+                // Update active button styling
+                document.querySelectorAll('.speed-btn').forEach((btn, index) => {
+                    if (index === level) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                
+                // Restart auto movement with new speed
+                if (gameActive) {
+                    startAutoMovement();
+                }
+                
+                console.log(`Speed changed to level ${level} (${speedNames[level]}): ${gameSpeed}ms`);
+            }
+        }
+    </script>
+</body>
+</html>
