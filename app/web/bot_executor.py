@@ -1,3 +1,5 @@
+from typing import Optional, Tuple
+
 from .state import custom_bots
 
 SAFE_BUILTINS = {
@@ -21,7 +23,7 @@ SAFE_BUILTINS = {
 }
 
 
-def validate_code(code: str) -> tuple[bool, str]:
+def validate_code(code: str) -> Tuple[bool, str]:
     if not code.strip():
         return False, 'Code cannot be empty'
     if 'def checkBot(' not in code:
@@ -35,7 +37,7 @@ def validate_code(code: str) -> tuple[bool, str]:
     return True, 'Code validation passed'
 
 
-def register_custom_bot(bot_name: str, code: str) -> tuple[bool, str, str | None]:
+def register_custom_bot(bot_name: str, code: str) -> Tuple[bool, str, Optional[str]]:
     if not bot_name:
         return False, 'Bot name is required', None
     if not code.strip():

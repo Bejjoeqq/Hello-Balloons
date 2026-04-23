@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from flask import Flask
 
@@ -9,7 +10,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _TEMPLATES = _REPO_ROOT / "templates"
 
 
-def create_app(config: Config | None = None) -> Flask:
+def create_app(config: Optional[Config] = None) -> Flask:
     app = Flask("hello_balloons", template_folder=str(_TEMPLATES))
     cfg = config or Config.from_env()
     app.config.from_object(cfg)
