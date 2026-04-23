@@ -1,6 +1,6 @@
 from app.hero import Hero
 from app.guide import header
-from app.prompt import cls, getKey, isTriggered
+from app.cli.prompt import cls, getKey, isTriggered
 from app import statePoint
 
 def play(name, best, map, speed, bot=None):

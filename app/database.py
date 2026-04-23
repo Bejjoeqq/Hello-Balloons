@@ -3,8 +3,8 @@ import os
 from datetime import datetime
 
 class GameDatabase:
-    def __init__(self, db_path="game_scores.db"):
-        self.db_path = db_path
+    def __init__(self, db_path=None):
+        self.db_path = db_path or os.getenv("DATABASE_PATH", "game_scores.db")
         self.init_database()
     
     def init_database(self):

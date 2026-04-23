@@ -1,194 +1,201 @@
-# 🎈 Hello-Balloons - Balloon Game
+# Hello-Balloons — Balloon Game
 
-A fun web-based balloon navigation game where you collect dollars while avoiding spikes! Built with Python Flask backend and interactive web interface.
+A balloon navigation game where you collect dollars while avoiding spikes. Ships with two interfaces: a **Flask web app** (primary) and a **terminal CLI** (legacy). Comes with a plug-in bot system and an in-browser bot builder.
 
-![Game Status](https://img.shields.io/badge/Status-In%20Development-yellow)
+![Status](https://img.shields.io/badge/Status-In%20Development-yellow)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
-![Flask](https://img.shields.io/badge/Flask-2.0+-green)
+![Flask](https://img.shields.io/badge/Flask-2.3-green)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
-## 🎮 Game Overview
+## Overview
 
-Navigate your balloon (O) through the map to collect dollars ($) while avoiding deadly spikes (*)! Each dollar collected spawns a new spike at the previous dollar location, making the game progressively more challenging.
+Navigate your balloon (`O`) to collect dollars (`$`) while avoiding spikes (`*`). Each dollar you collect spawns a new spike at the old dollar location — the map gets progressively deadlier.
 
-### 🎯 Game Features
+### Features
 
-- **Interactive Web UI**: Play directly in your browser
-- **Bot Algorithms**: Watch AI bots play with different strategies
-- **Bot Builder**: Create and test your own bot algorithms
-- **Speed Controls**: Multiple speed settings from Slow to Godspeed
-- **Score System**: Track your best scores and compete on leaderboards
-- **Real-time Gameplay**: Smooth animations and responsive controls
+- **Web UI** — play in the browser, no install on the client side
+- **Bot demos** — watch a gallery of pre-built AI algorithms play
+- **Bot builder** — write and run your own `checkBot(hero)` in-browser
+- **Server-side leaderboard** — scores persisted in SQLite (`game_scores.db`)
+- **Admin panel** — PIN-gated view over the raw scores table
+- **CLI mode** — terminal version with menu-driven play
 
-## 🚀 Quick Start
+## Quick start
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- Flask 2.0+
+- Python 3.8+
+- Git
 
-### Installation
+### Install
 
-1. Clone the repository:
 ```bash
 git clone https://github.com/Bejjoeqq/Hello-Balloons.git
 cd Hello-Balloons
+
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt
+cp .env.example .env              # then edit the values you care about
 ```
 
-2. Install dependencies:
-```bash
-pip install flask
-```
+### Run (web mode — recommended)
 
-3. Run the game:
 ```bash
 python web_app.py
 ```
 
-4. Open your browser and navigate to `http://localhost:5000`
+Open `http://127.0.0.1:5000` in a browser. The SQLite database is created automatically on first launch.
 
-## 🎮 How to Play
+> Default host is `127.0.0.1`. To expose on your LAN, set `FLASK_HOST=0.0.0.0` in `.env`.
 
-### Human Player Mode
-- **W, A, S, D** - Move your balloon
-- **Objective**: Collect dollars ($) while avoiding spikes (*)
-- **Challenge**: Each dollar collected creates a spike at the previous location
+### Run (CLI mode)
 
-### Bot Demo Mode
-- Watch pre-built AI bots play automatically
-- Choose from multiple bot algorithms
-- Adjust playback speed for better observation
-
-### Bot Builder Mode
-- Write your own Python bot algorithm
-- Test your bot in real-time
-- Save and share your creations
-
-## 🤖 Bot Development
-
-### Creating a Bot
-
-Your bot must implement the `checkBot(hero)` function:
-
-```python
-def checkBot(hero):
-    # Get current position
-    pos = hero.getLocation()  # Returns [x, y]
-    
-    # Get dollar location
-    dollar = hero.findLocationDollar()  # Returns [y, x]
-    
-    # Your logic here...
-    
-    return 'w'  # Return: 'w', 'a', 's', or 'd'
+```bash
+python main.py
 ```
 
-### Available Bot Methods
+Terminal menu for Play / Leaderboard / Bot demo / Exit. Keyboard input is implemented for Windows (`msvcrt`); on Linux/macOS the arrow-key handler is not wired up — use the web mode instead.
 
-- `hero.getLocation()` - Get balloon position [x, y]
-- `hero.findLocationDollar()` - Get dollar position [y, x]
-- `hero.getMove()` - Get current move direction
-- `hero.getMap()` - Get full map state
+## Configuration
 
-### Built-in Bot Algorithms
+All runtime config is read from environment variables (see `.env.example`):
 
-The game includes several pre-built bots with different strategies:
-- **Champion Bot**: Advanced pathfinding algorithm
-- **Perfect Score Bot**: Optimized for high scores
-- **Quantum Neural Bot**: AI-powered decision making
-- **And more!**
+| Variable            | Default              | Purpose                                                     |
+| ------------------- | -------------------- | ----------------------------------------------------------- |
+| `FLASK_SECRET_KEY`  | random per boot      | Flask session signing key. Set explicitly in production.    |
+| `FLASK_DEBUG`       | `0`                  | `1` enables Flask debug mode (dev only, do not ship).       |
+| `FLASK_HOST`        | `127.0.0.1`          | Bind address. `0.0.0.0` exposes on LAN.                     |
+| `FLASK_PORT`        | `5000`               | HTTP port.                                                  |
+| `ADMIN_PIN`         | `000000`             | PIN required to open the admin panel.                       |
+| `DATABASE_PATH`     | `game_scores.db`     | SQLite file location.                                       |
 
-## 📁 Project Structure
+### Admin panel
+
+Navigate to `/admin_panel` and enter `ADMIN_PIN`. The default (`000000`) is suitable for local development only — set a real value via `.env` before exposing the app.
+
+## Gameplay
+
+### Human player
+
+- **W / A / S / D** — move up / left / down / right
+- **Goal** — collect `$` while avoiding `*`
+- **Catch** — every `$` eaten spawns a new `*` where the dollar was
+
+### Bot demo
+
+Pick a bot from the dropdown and watch it play. Speed is adjustable from *Slow* to *Godspeed*.
+
+### Bot builder
+
+Write a `checkBot(hero)` function in the browser editor, validate, then run. Your bot must return one of `'w' | 'a' | 's' | 'd'`.
+
+## Bot API
+
+```python
+NAME = "My Bot"
+
+def checkBot(hero):
+    x, y = hero.getLocation()           # balloon position
+    ydollar, xdollar = hero.findLocationDollar()   # dollar position
+    # ... your logic ...
+    return 'w'   # 'w', 'a', 's', or 'd'
+```
+
+### Hero methods
+
+| Method                      | Returns                              |
+| --------------------------- | ------------------------------------ |
+| `hero.getLocation()`        | `[x, y]` balloon position            |
+| `hero.findLocationDollar()` | `[y, x]` dollar position             |
+| `hero.getMove()`            | current direction                    |
+| `hero.getMap()`             | 2D list of map cells                 |
+
+### Built-in bots
+
+All files in `app/bot/` are auto-loaded at start (except `template.py`). Notable ones: `champion_bot`, `perfect_score_bot`, `quantum_neural_bot`, `astar_supreme_bot`, `hybrid_master_bot`.
+
+## Project structure
 
 ```
 Hello-Balloons/
-├── web_app.py              # Flask web server
-├── main.py                 # CLI version entry point
+├── main.py                  # CLI entry shim → app.cli.run()
+├── web_app.py               # Web entry shim → app.web.create_app()
 ├── app/
-│   ├── __init__.py         # App initialization
-│   ├── hero.py             # Hero/Balloon class
-│   ├── map.py              # Game map logic
-│   ├── guide.py            # Game utilities
-│   ├── start.py            # Game state management
-│   ├── prompt.py           # Input handling
-│   └── bot/
-│       ├── __init__.py     # Bot loader
-│       ├── template.py     # Bot template
-│       └── *.py            # Individual bot algorithms
-├── templates/
-│   ├── index.html          # Main menu
-│   ├── game.html           # Human player interface
-│   ├── bot_demo.html       # Bot demonstration
-│   └── bot_builder.html    # Bot creation interface
-└── README.md               # This file
+│   ├── __init__.py          # shared: statePoint(), baseMap()
+│   ├── hero.py              # shared: Hero class
+│   ├── map.py               # shared: Map class
+│   ├── guide.py             # shared: text helpers
+│   ├── database.py          # GameDatabase (SQLite) — single DB source
+│   ├── bot/                 # bot registry + built-in bot algorithms
+│   │   ├── __init__.py      # auto-loader
+│   │   ├── template.py      # starter template for new bots
+│   │   └── *.py             # built-in bots
+│   ├── cli/                 # CLI interface
+│   │   ├── __init__.py      # run() — menu loop
+│   │   ├── prompt.py        # terminal key reading
+│   │   └── start.py         # CLI game loop
+│   └── web/                 # Flask interface
+│       ├── __init__.py      # create_app() factory
+│       ├── config.py        # Config dataclass (env vars)
+│       ├── state.py         # in-memory session/custom-bot registries
+│       ├── session.py       # GameSession class
+│       ├── bot_executor.py  # custom-bot validation + sandboxed exec
+│       └── routes.py        # Flask blueprint with all 20 routes
+├── templates/               # Flask HTML templates
+├── .env.example             # env var reference
+├── .gitignore
+├── LICENSE                  # MIT
+├── CONTRIBUTING.md
+├── pyproject.toml           # PEP 621 metadata + ruff config
+├── requirements.txt         # runtime deps
+└── requirements-dev.txt     # dev deps (ruff, pytest)
 ```
 
-## 🛠️ Development Status
-
-**🚧 Currently in active development**
-
-- ✅ Core gameplay mechanics
-- ✅ Web interface
-- ✅ Bot system integration
-- ✅ Custom bot builder
-- 🔄 Enhanced AI algorithms
-- 🔄 Multiplayer features
-- 🔄 Persistent online leaderboards
-
-## 💾 Data Storage
-
-**Important**: This game currently uses **local storage only**:
-- All scores and progress are stored in your browser
-- Data may be lost if you clear browser data
-- No online sync or backup currently available
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how you can help:
-
-### Adding Bot Algorithms
-
-1. Create a new Python file in `app/bot/`
-2. Implement the required `NAME` variable and `checkBot(hero)` function
-3. Test your bot using the Bot Builder interface
-4. Submit a pull request with your bot algorithm
-
-### Bug Reports & Feature Requests
-
-- Open an issue on GitHub
-- Provide detailed description and steps to reproduce
-- Include browser information for web-related issues
-
-### Development Setup
+## Development
 
 ```bash
-# Clone the repo
-git clone https://github.com/Bejjoeqq/Hello-Balloons.git
-
-# Create development branch
-git checkout -b feature/your-feature-name
-
-# Make changes and test
-python web_app.py
-
-# Submit pull request
+pip install -r requirements-dev.txt
+ruff check .                 # lint
 ```
 
-## 📝 License
+Run the app locally as described in *Quick start*. The SQLite DB (`game_scores.db`) is created on first import of `app.database`; it is git-ignored.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### Adding a bot
 
-## 🙏 Acknowledgments
+1. Copy `app/bot/template.py` to `app/bot/your_bot.py`
+2. Set `NAME = "Your Bot"` and implement `checkBot(hero)`
+3. Restart the server — it's auto-registered on import
+4. Open `/bot_demo` and pick it from the list
 
-- **AI-Assisted Development**: This project was developed with assistance from AI tools for code generation, debugging, and documentation
+## Data storage
+
+Scores are stored server-side in a local SQLite file (`game_scores.db` by default, overridable via `DATABASE_PATH`). There is **no** browser-local-storage leaderboard. The database file is ignored by git — every checkout starts fresh.
+
+## Roadmap
+
+- Test suite under `tests/` with fixtures for `GameDatabase`
+- `.github/workflows/` CI running ruff + pytest
+- Type hints / `mypy` pass
+- Replace in-memory `game_sessions` dict with Redis (for multi-worker deploys)
+- Harden the custom-bot sandbox (restrict imports, add CPU / wall-time limits)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[MIT](LICENSE).
+
+## Acknowledgments
+
+- Project developed with AI-assisted tooling for code generation and documentation
 - Game concept inspired by classic navigation puzzles
-- Thanks to all contributors and bot algorithm creators
+- Thanks to all contributors and bot authors
 
-## 📧 Contact
+## Contact
 
 - **GitHub**: [Bejjoeqq](https://github.com/Bejjoeqq)
 - **Repository**: [Hello-Balloons](https://github.com/Bejjoeqq/Hello-Balloons)
-
----
-
-*Made with ❤️ and 🤖 AI assistance*

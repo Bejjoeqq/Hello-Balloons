@@ -1,0 +1,12 @@
+[project]
+name = "hello-balloons"
+version = "0.1.0"
+description = "A Flask + CLI balloon navigation game with bot algorithms."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.8"
+authors = [{ name = "Bejjoeqq" }]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
