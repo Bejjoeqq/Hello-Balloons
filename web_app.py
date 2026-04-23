@@ -5,6 +5,7 @@ from app.hero import Hero
 from app.guide import header
 from app import statePoint, baseMap
 from app.bot import getBot
+from app.database import db
 import threading
 import time
 
@@ -39,6 +40,11 @@ class GameSession:
         self.is_active = False
         self.is_bot_demo = False
         self.bot_function = None
+        self.move_count = 0  # Track number of moves
+        
+        # Initialize is_test_bot only if not already set
+        if not hasattr(self, 'is_test_bot'):
+            self.is_test_bot = False
         
         # Leaderboard data
         self.all_scores = [10000, 6000, 3000, 1000]
@@ -51,6 +57,9 @@ class GameSession:
         
         speed_values = [0.1, 0.05, 0.01, 0.005, 0.002, 0.001]  # Slow, Normal, Fast, Insane, Lightning, Godspeed
         speed = speed_values[min(self.speed_level, len(speed_values) - 1)]
+        
+        # Reset move count for new game
+        self.move_count = 0
         
         self.current_game = {
             'hero': hero,
@@ -79,6 +88,10 @@ class GameSession:
         # Always try to move (will use current direction or no movement)
         safety, is_eat = hero.moveWithAutoDirection()
         
+        # Increment move count if there was actual movement
+        if hero.hasMove():
+            self.move_count += 1
+        
         # Update game state only if there was actual movement
         if hero.hasMove():
             if game['rage'] != 0:
@@ -92,10 +105,35 @@ class GameSession:
             game['game_over'] = True
             self.is_active = False
             final_score = game['point']
-            
+
             if final_score > self.best_score:
                 self.best_score = final_score
+
+            # Save scores to database (except test bot from bot builder)
+            moves = getattr(self, 'move_count', 0)  # Track moves if available
+            score_type = 'bot' if self.is_bot_demo else 'normal'
             
+            # Debug info
+            print(f"DEBUG: Game over - Player: {self.player_name}, Score: {final_score}, Type: {score_type}")
+            print(f"DEBUG: Is bot demo: {self.is_bot_demo}, Is test bot: {self.is_test_bot}")
+            
+            # Don't save test bot scores from bot builder
+            if not self.is_test_bot:
+                print(f"DEBUG: Saving to database...")
+                result = db.save_score(
+                    points=final_score,
+                    rages=game['rage'],
+                    spikes=len([cell for row in hero.getMap() for cell in row if cell == '*']),
+                    eaten=game['eated'],
+                    moves=moves,
+                    time=game['sp'],
+                    name=self.player_name,
+                    score_type=score_type
+                )
+                print(f"DEBUG: Database save result: {result}")
+            else:
+                print(f"DEBUG: Skipping database save for test bot from bot builder")
+
             self.scores.append(final_score)
             self.all_scores.append(final_score)
             self.all_names.append(self.player_name)
@@ -163,6 +201,9 @@ class GameSession:
         map_data = baseMap()
         hero = Hero(map_data)
         
+        # Reset move count for bot demo
+        self.move_count = 0
+        
         speed_values = [0.1, 0.05, 0.01]
         speed = speed_values[1]  # Use normal speed for demo
         
@@ -180,6 +221,8 @@ class GameSession:
         self.is_bot_demo = True
         self.bot_function = bot_function
         self.player_name = bot_name
+        # Note: is_test_bot flag is preserved from session creation
+        print(f"DEBUG: start_bot_demo - is_test_bot preserved: {getattr(self, 'is_test_bot', 'NOT_SET')}")
         return self.current_game
     
     def make_bot_move(self):
@@ -201,6 +244,8 @@ class GameSession:
             
             # Update game state only if there was actual movement
             if hero.hasMove():
+                self.move_count += 1  # Track bot moves
+                
                 if game['rage'] != 0:
                     game['rage'] -= 1
                 
@@ -212,6 +257,28 @@ class GameSession:
                 game['game_over'] = True
                 self.is_active = False
                 final_score = game['point']
+                
+                # Save bot demo score to database (except test bot)
+                moves = getattr(self, 'move_count', 0)
+                print(f"DEBUG: Bot demo finished - {self.player_name} scored {final_score}")
+                print(f"DEBUG: Is test bot: {self.is_test_bot}")
+                
+                # Don't save test bot scores from bot builder
+                if not self.is_test_bot:
+                    print(f"DEBUG: Saving score for {self.player_name} (bot) with {final_score} points")
+                    result = db.save_score(
+                        points=final_score,
+                        rages=game['rage'],
+                        spikes=len([cell for row in hero.getMap() for cell in row if cell == '*']),
+                        eaten=game['eated'],
+                        moves=moves,
+                        time=game['sp'],
+                        name=self.player_name,
+                        score_type='bot'
+                    )
+                    print(f"DEBUG: Bot demo database save result: {result}")
+                else:
+                    print(f"DEBUG: Skipping database save for test bot: {self.player_name}")
                 
                 return {
                     'success': True,
@@ -375,33 +442,50 @@ def get_game_state():
 
 @app.route('/leaderboard', methods=['GET'])
 def leaderboard():
-    session_id = session.get('game_session_id')
-    if not session_id or session_id not in game_sessions:
-        # Return default leaderboard
-        default_scores = [10000, 6000, 3000, 1000]
-        default_names = ["Pro(Computer)", "Advance(Computer)", "Intermediate(Computer)", "Novice(Computer)"]
-        combined = list(zip(default_scores, default_names))
-        sorted_scores = sorted(combined, key=lambda x: x[0], reverse=True)
-        leaderboard_data = [{'score': score, 'name': name, 'rank': i+1} 
-                           for i, (score, name) in enumerate(sorted_scores)]
-    else:
-        game_session = game_sessions[session_id]
-        leaderboard_data = game_session.get_leaderboard()
-    
-    return jsonify({'success': True, 'leaderboard': leaderboard_data})
+    try:
+        # Get leaderboard from database
+        leaderboard_data = db.get_leaderboard(limit=10)
+        
+        # Format for frontend
+        formatted_leaderboard = []
+        for entry in leaderboard_data:
+            formatted_leaderboard.append({
+                'score': entry['points'],
+                'name': entry['name'],
+                'rank': entry['rank'],
+                'type': entry['type'],
+                'time': entry['time'],
+                'moves': entry['moves']
+            })
+        
+        return jsonify({'success': True, 'leaderboard': formatted_leaderboard})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error loading leaderboard: {str(e)}'})
 
 @app.route('/recent_scores', methods=['GET'])
 def recent_scores():
-    session_id = session.get('game_session_id')
-    if not session_id or session_id not in game_sessions:
-        return jsonify({'success': False, 'message': 'No active game session'})
-    
-    game_session = game_sessions[session_id]
-    return jsonify({
-        'success': True, 
-        'scores': game_session.scores,
-        'player_name': game_session.player_name
-    })
+    try:
+        # Get recent scores from database
+        recent_scores_data = db.get_recent_scores(limit=10)
+        
+        # Format for frontend
+        formatted_scores = []
+        for score in recent_scores_data:
+            formatted_scores.append({
+                'score': score['points'],
+                'name': score['name'],
+                'type': score['type'],
+                'time': score['time'],
+                'moves': score['moves'],
+                'created_at': score['created_at']
+            })
+        
+        return jsonify({
+            'success': True, 
+            'scores': formatted_scores
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error loading recent scores: {str(e)}'})
 
 @app.route('/start_bot_demo', methods=['POST'])
 def start_bot_demo():
@@ -598,6 +682,8 @@ def start_custom_bot_demo():
         
         # Create new custom bot demo session with selected speed
         game_session = GameSession(bot_name, speed_level)
+        game_session.is_test_bot = True  # Mark as test bot from bot builder
+        print(f"DEBUG: Created test bot session - is_test_bot: {game_session.is_test_bot}")
         session_id = game_session.id
         game_sessions[session_id] = game_session
         
@@ -631,6 +717,34 @@ def custom_bot_move():
     
     result = game_session.make_bot_move()
     return jsonify(result)
+
+@app.route('/admin_panel')
+def admin_panel():
+    """Admin panel page for database viewing"""
+    return render_template('admin.html')
+
+@app.route('/admin_data', methods=['POST'])
+def admin_data():
+    """Get admin data with PIN verification"""
+    try:
+        data = request.json
+        pin = data.get('pin', '')
+        
+        # Default PIN is 000000
+        if pin != '000000':
+            return jsonify({'success': False, 'message': 'Invalid PIN'})
+        
+        # Get all scores data
+        all_scores = db.get_all_scores_admin()
+        
+        return jsonify({
+            'success': True,
+            'data': all_scores,
+            'total_records': len(all_scores)
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

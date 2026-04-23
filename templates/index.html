@@ -92,6 +92,12 @@
             border-bottom: none;
         }
         
+        .leaderboard-item.bot-player {
+            font-weight: bold;
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 3px solid #ffc107;
+        }
+        
         .rank-1 { color: #ffd700; }
         .rank-2 { color: #c0c0c0; }
         .rank-3 { color: #cd7f32; }
@@ -132,7 +138,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎈 Balloon Game 🎈</h1>
+        <h1 id="main-title" onclick="handleTitleClick()">🎈 Balloon Game 🎈</h1>
         
         <div id="main-menu">
             <button class="menu-item" onclick="showPlayForm()">🎮 Play Game</button>
@@ -148,8 +154,8 @@
             <h3>ℹ️ Development Status</h3>
             <p><strong>🚧 This game is currently in development phase</strong></p>
             <ul style="text-align: left; margin: 10px 0;">
-                <li>📱 <strong>Local Storage Only:</strong> All scores and data are stored locally on your device</li>
-                <li>🔄 <strong>Data Persistence:</strong> Your progress may be lost if you clear browser data</li>
+                <li>�️ <strong>SQLite Database:</strong> All scores and data are now stored in a local SQLite database</li>
+                <li>� <strong>Persistent Storage:</strong> Your scores are saved and will persist across sessions</li>
                 <li>🎯 <strong>Active Development:</strong> New features and improvements are being added regularly</li>
                 <li>🐛 <strong>Bug Reports:</strong> Please report any issues you encounter</li>
             </ul>
@@ -310,10 +316,20 @@ O $     ->     * O
                 const content = document.getElementById('recent-scores-content');
                 if (data.success) {
                     if (data.scores.length > 0) {
-                        let html = `<div class="info-box">`;
-                        html += `<h3>Player: ${data.player_name}</h3>`;
-                        html += `<h4>Scores: ${data.scores.join(', ')}</h4>`;
-                        html += `</div>`;
+                        let html = '<div class="info-box">';
+                        html += '<h3>Recent Scores</h3>';
+                        
+                        data.scores.forEach((score, index) => {
+                            const gameType = score.type === 'bot' ? '🤖' : '👤';
+                            html += `
+                                <div style="border-bottom: 1px solid #444; padding: 10px 0; margin: 5px 0;">
+                                    <div><strong>${gameType} ${score.name}</strong></div>
+                                    <div>Score: <strong>${score.score}</strong> | Time: ${score.time}s | Moves: ${score.moves}</div>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
                         content.innerHTML = html;
                     } else {
                         content.innerHTML = '<div class="info-box">No games played yet!</div>';
@@ -337,8 +353,9 @@ O $     ->     * O
                     let html = '';
                     data.leaderboard.forEach(entry => {
                         const rankClass = entry.rank <= 3 ? `rank-${entry.rank}` : '';
-                        html += `<div class="leaderboard-item ${rankClass}">`;
-                        html += `<span>${entry.rank}. ${entry.name}</span>`;
+                        const botClass = entry.type === 'bot' ? 'bot-player' : '';
+                        html += `<div class="leaderboard-item ${rankClass} ${botClass}">`;
+                        html += `<span>${entry.rank}. ${entry.name}${entry.type === 'bot' ? ' 🤖' : ''}</span>`;
                         html += `<span>${entry.score}</span>`;
                         html += `</div>`;
                     });
@@ -361,6 +378,26 @@ O $     ->     * O
         function goBotBuilder() {
             // Redirect to bot builder page
             window.location.href = '/bot_builder';
+        }
+        
+        // Hidden admin access
+        let titleClickCount = 0;
+        let titleClickTimer = null;
+        
+        function handleTitleClick() {
+            titleClickCount++;
+            
+            if (titleClickTimer) {
+                clearTimeout(titleClickTimer);
+            }
+            
+            titleClickTimer = setTimeout(() => {
+                if (titleClickCount >= 5) {
+                    // 5 clicks on title opens admin panel
+                    window.location.href = '/admin_panel';
+                }
+                titleClickCount = 0;
+            }, 2000); // Reset after 2 seconds
         }
     </script>
 </body>
