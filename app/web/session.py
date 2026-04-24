@@ -1,3 +1,4 @@
+import threading
 import uuid
 
 from app import baseMap, statePoint
@@ -17,6 +18,13 @@ class GameSession:
         self.is_bot_demo = False
         self.bot_function = None
         self.move_count = 0
+        # Flask runs requests in parallel threads by default. The client's
+        # setInterval polling on /bot_move can fire a second request before
+        # the previous one returns, letting two threads mutate the same
+        # hero/grid concurrently — which causes the bot to step onto a
+        # spike whose trail was laid by a sibling request. Serialize all
+        # state-mutating operations on this session.
+        self._move_lock = threading.Lock()
 
         if not hasattr(self, 'is_test_bot'):
             self.is_test_bot = False
@@ -48,6 +56,10 @@ class GameSession:
         return self.current_game
 
     def make_move(self, move):
+        with self._move_lock:
+            return self._make_move_locked(move)
+
+    def _make_move_locked(self, move):
         if not self.is_active or not self.current_game or self.current_game['game_over']:
             return {'success': False, 'message': 'No active game'}
 
@@ -188,6 +200,10 @@ class GameSession:
         return self.current_game
 
     def make_bot_move(self):
+        with self._move_lock:
+            return self._make_bot_move_locked()
+
+    def _make_bot_move_locked(self):
         if not self.is_active or not self.current_game or self.current_game['game_over'] or not self.is_bot_demo:
             return {'success': False, 'message': 'No active bot demo'}
 
